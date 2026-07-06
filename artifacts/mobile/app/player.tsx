@@ -88,6 +88,7 @@ const SingleVideo = ({
         style={styles.video}
         nativeControls={false}
         contentFit="cover"
+        surfaceType="textureView"
       />
       {isUnlocked && showPauseIcon && (
         <View style={styles.centerIconOverlay} pointerEvents="none">
