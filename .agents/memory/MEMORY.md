@@ -1,0 +1,2 @@
+- [Expo video dependency](expo-video-setup.md) — expo-video is not in the mobile scaffold's package.json by default; must be installed explicitly before use.
+- [Artifact workflow naming](artifact-workflow-names.md) — restart_workflow needs the full registered name, not the artifact slug.

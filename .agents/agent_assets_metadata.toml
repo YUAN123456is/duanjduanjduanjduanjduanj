@@ -1,0 +1,32 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "a3pVprWzejTKeCmN8MtkN"
+uri = "file://artifacts/mobile/assets/images/icon.png"
+type = "image"
+title = "drama app icon"
+
+[[generated]]
+id = "232qtlE7WtdwQf93fCjgZ"
+uri = "file://attached_assets/generated_images/poster_ceo_romance.png"
+type = "image"
+title = "ceo romance poster"
+
+[[generated]]
+id = "_91m8GFd8oN5d6nnx_rvN"
+uri = "file://attached_assets/generated_images/poster_werewolf.png"
+type = "image"
+title = "werewolf poster"
+
+[[generated]]
+id = "nO0mwKd9MGGJvHQAeLFp7"
+uri = "file://attached_assets/generated_images/poster_revenge.png"
+type = "image"
+title = "revenge poster"
+
+[[generated]]
+id = "Ss7dt7_peRk2vT-2ihs32"
+uri = "file://attached_assets/generated_images/poster_billionaire.png"
+type = "image"
+title = "billionaire poster"
