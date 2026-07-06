@@ -11,6 +11,7 @@ import { useGetDramaPlayback, getGetDramaPlaybackQueryKey } from '@workspace/api
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 import { useDrama } from '@/context/DramaContext';
+import { useLocale } from '@/context/LocaleContext';
 import colors from '@/constants/colors';
 import * as Haptics from 'expo-haptics';
 
@@ -147,11 +148,12 @@ export default function PlayerScreen() {
 
   const { userId } = useAuth();
   const { updateProgress, isFavorite, toggleFavorite } = useDrama();
+  const { locale } = useLocale();
   const queryClient = useQueryClient();
 
   const { data: drama, isLoading, isError } = useGetDramaPlayback(
-    { dramaId, userId: userId ?? undefined },
-    { query: { enabled: !!dramaId, queryKey: getGetDramaPlaybackQueryKey({ dramaId, userId: userId ?? undefined }) } }
+    { dramaId, userId: userId ?? undefined, locale },
+    { query: { enabled: !!dramaId, queryKey: getGetDramaPlaybackQueryKey({ dramaId, userId: userId ?? undefined, locale }) } }
   );
 
   const [currentIndex, setCurrentIndex] = useState(initialEpisode - 1);

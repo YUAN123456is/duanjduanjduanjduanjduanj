@@ -30,3 +30,27 @@ id = "Ss7dt7_peRk2vT-2ihs32"
 uri = "file://attached_assets/generated_images/poster_billionaire.png"
 type = "image"
 title = "billionaire poster"
+
+[[generated]]
+id = "MkJzSeBkoWSmmB7D0iqVE"
+uri = "file://artifacts/landing/public/images/hero-bg.png"
+type = "image"
+title = "Cinematic dark red nightlife background"
+
+[[generated]]
+id = "gpwKTRhO5Utzfe5Sw-PqH"
+uri = "file://artifacts/landing/public/images/poster-1.png"
+type = "image"
+title = "Billionaire romance drama poster"
+
+[[generated]]
+id = "ZI47LZXfKrMiA-7YYTksX"
+uri = "file://artifacts/landing/public/images/poster-2.png"
+type = "image"
+title = "Revenge thriller drama poster"
+
+[[generated]]
+id = "jPMn7PkFy6JmhdzA4WQ_J"
+uri = "file://artifacts/landing/public/images/poster-3.png"
+type = "image"
+title = "Mystery mansion drama poster"

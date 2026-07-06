@@ -2,10 +2,12 @@ import React, { useState } from "react";
 import { View, Text, StyleSheet, Pressable, Modal } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/context/AuthContext";
+import { useLocale } from "@/context/LocaleContext";
 import colors from "@/constants/colors";
 
 export default function Onboarding() {
   const { completeOnboarding } = useAuth();
+  const { t } = useLocale();
   const router = useRouter();
   const [showATT, setShowATT] = useState(false);
 
@@ -22,28 +24,28 @@ export default function Onboarding() {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>Welcome to DramaVerse</Text>
-        <Text style={styles.subtitle}>Binge-worthy short dramas, updated daily.</Text>
+        <Text style={styles.title}>{t("onboarding.title")}</Text>
+        <Text style={styles.subtitle}>{t("onboarding.subtitle")}</Text>
       </View>
       <View style={styles.footer}>
         <Pressable style={styles.button} onPress={handleContinue} testID="onboarding-continue">
-          <Text style={styles.buttonText}>Continue</Text>
+          <Text style={styles.buttonText}>{t("onboarding.continue")}</Text>
         </Pressable>
       </View>
 
       <Modal visible={showATT} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.attModal}>
-            <Text style={styles.attTitle}>Allow DramaVerse to track your activity across other apps?</Text>
-            <Text style={styles.attBody}>This helps us show you more relevant dramas and ads.</Text>
+            <Text style={styles.attTitle}>{t("onboarding.attTitle")}</Text>
+            <Text style={styles.attBody}>{t("onboarding.attBody")}</Text>
             
             <View style={styles.attButtons}>
               <Pressable style={styles.attButton} onPress={() => handleATT("ask_not_to_track")}>
-                <Text style={styles.attButtonTextBlue}>Ask App Not to Track</Text>
+                <Text style={styles.attButtonTextBlue}>{t("onboarding.attAskNotToTrack")}</Text>
               </Pressable>
               <View style={styles.divider} />
               <Pressable style={styles.attButton} onPress={() => handleATT("allow")}>
-                <Text style={styles.attButtonTextBlue}>Allow</Text>
+                <Text style={styles.attButtonTextBlue}>{t("onboarding.attAllow")}</Text>
               </Pressable>
             </View>
           </View>

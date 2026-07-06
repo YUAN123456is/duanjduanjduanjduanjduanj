@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: geo
+    description: IP-based locale/region detection for the H5 landing page
   - name: config
     description: Global ad & compliance configuration
   - name: dramas
@@ -40,6 +42,19 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /geo/locale:
+    get:
+      operationId: getGeoLocale
+      tags: [geo]
+      summary: Detect the caller's language/region from their IP address
+      responses:
+        "200":
+          description: Detected locale info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeoLocale"
 
   /config/global:
     get:
@@ -187,6 +202,11 @@ paths:
           schema:
             type: string
         - name: userId
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: locale
           in: query
           required: false
           schema:
@@ -567,6 +587,22 @@ components:
       required:
         - status
 
+    GeoLocale:
+      type: object
+      required:
+        - locale
+        - country
+        - isRtl
+      properties:
+        locale:
+          type: string
+          description: "Detected locale code (e.g. 'en', 'es', 'ar', 'zh-Hant')"
+        country:
+          type: ["string", "null"]
+          description: "Detected ISO country code, or null if lookup failed"
+        isRtl:
+          type: boolean
+
     GlobalConfig:
       type: object
       required:
@@ -611,6 +647,7 @@ components:
       required:
         - id
         - titleEn
+        - titles
         - coverUrl
         - tags
         - totalEpisodes
@@ -625,10 +662,11 @@ components:
           type: string
         titleEn:
           type: string
-        titleEs:
-          type: ["string", "null"]
-        titleZhTw:
-          type: ["string", "null"]
+        titles:
+          type: object
+          additionalProperties:
+            type: string
+          description: "Per-locale title overrides, keyed by locale code (e.g. 'es', 'th', 'ar'). English falls back to titleEn."
         coverUrl:
           type: string
         description:
@@ -662,10 +700,11 @@ components:
         titleEn:
           type: string
           minLength: 1
-        titleEs:
-          type: string
-        titleZhTw:
-          type: string
+        titles:
+          type: object
+          additionalProperties:
+            type: string
+          description: "Optional per-locale title overrides, keyed by locale code (e.g. 'es', 'th', 'ar'). English falls back to titleEn."
         coverUrl:
           type: string
         description:
@@ -689,10 +728,11 @@ components:
         titleEn:
           type: string
           minLength: 1
-        titleEs:
-          type: string
-        titleZhTw:
-          type: string
+        titles:
+          type: object
+          additionalProperties:
+            type: string
+          description: "Optional per-locale title overrides, keyed by locale code (e.g. 'es', 'th', 'ar'). English falls back to titleEn."
         coverUrl:
           type: string
         description:
@@ -963,6 +1003,10 @@ components:
           type: string
         titleEn:
           type: string
+        titles:
+          type: object
+          additionalProperties:
+            type: string
         coverUrl:
           type: string
         sortOrder:
@@ -1035,6 +1079,10 @@ components:
           format: date-time
         titleEn:
           type: string
+        titles:
+          type: object
+          additionalProperties:
+            type: string
         coverUrl:
           type: string
         freeEpisodesCount:

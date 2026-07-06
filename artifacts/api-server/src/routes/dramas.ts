@@ -29,8 +29,7 @@ router.get("/dramas", async (req, res): Promise<void> => {
     .select({
       id: dramasTable.id,
       titleEn: dramasTable.titleEn,
-      titleEs: dramasTable.titleEs,
-      titleZhTw: dramasTable.titleZhTw,
+      titles: dramasTable.titles,
       coverUrl: dramasTable.coverUrl,
       description: dramasTable.description,
       tags: dramasTable.tags,
@@ -50,8 +49,7 @@ router.get("/dramas", async (req, res): Promise<void> => {
         query.data.search
           ? or(
               ilike(dramasTable.titleEn, `%${query.data.search}%`),
-              ilike(dramasTable.titleEs, `%${query.data.search}%`),
-              ilike(dramasTable.titleZhTw, `%${query.data.search}%`),
+              ilike(sql`${dramasTable.titles}::text`, `%${query.data.search}%`),
             )
           : undefined,
       ),
@@ -116,10 +114,13 @@ router.get("/dramas/playback", async (req, res): Promise<void> => {
     .set({ viewsCount: sql`${dramasTable.viewsCount} + 1` })
     .where(eq(dramasTable.id, query.data.dramaId));
 
+  const locale = query.data.locale;
+  const localizedTitle = (locale && drama.titles && drama.titles[locale]) || drama.titleEn;
+
   res.json(
     GetDramaPlaybackResponse.parse({
       dramaId: drama.id,
-      title: drama.titleEn,
+      title: localizedTitle,
       coverUrl: drama.coverUrl,
       description: drama.description,
       tags: drama.tags,

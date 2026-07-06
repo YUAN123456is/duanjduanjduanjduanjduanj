@@ -57,6 +57,7 @@
   },
   "dependencies": {
     "@react-native-community/slider": "5.0.1",
+    "expo-localization": "~17.0.9",
     "expo-video": "~3.0.16"
   }
 }

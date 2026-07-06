@@ -9,6 +9,7 @@ import { setBaseUrl } from "@workspace/api-client-react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthProvider } from "@/context/AuthContext";
 import { DramaProvider } from "@/context/DramaContext";
+import { LocaleProvider } from "@/context/LocaleContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -41,13 +42,15 @@ export default function RootLayout() {
     <QueryClientProvider client={queryClient}>
       <SafeAreaProvider>
         <ErrorBoundary>
-          <AuthProvider>
-            <DramaProvider>
-              <GestureHandlerRootView style={{ flex: 1, backgroundColor: "#0A0D14" }}>
-                <RootLayoutNav />
-              </GestureHandlerRootView>
-            </DramaProvider>
-          </AuthProvider>
+          <LocaleProvider>
+            <AuthProvider>
+              <DramaProvider>
+                <GestureHandlerRootView style={{ flex: 1, backgroundColor: "#0A0D14" }}>
+                  <RootLayoutNav />
+                </GestureHandlerRootView>
+              </DramaProvider>
+            </AuthProvider>
+          </LocaleProvider>
         </ErrorBoundary>
       </SafeAreaProvider>
     </QueryClientProvider>

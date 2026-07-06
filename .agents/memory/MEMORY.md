@@ -5,3 +5,4 @@
 - [FontAwesome5 Regular font crash](expo-fontawesome5-regular-crash.md) — always pass explicit `solid`/`brand` prop on `<FontAwesome5>`; default (Regular) font isn't bundled and crashes on native.
 - [RN-web slider drag testing limitation](rn-web-slider-drag-testing.md) — simulated browser "drag" on RN responder-based sliders often false-fails; verify with click-to-seek instead.
 - [Orval request body schema naming](orval-request-body-naming.md) — a requestBody `$ref` schema is exported at runtime as `<operationId>Body`, not its own component name; don't name a schema that way.
+- [Base-path asset refs](base-path-asset-refs.md) — root-relative `/images/...`, `/favicon.svg` etc. 404 under an artifact's proxy path prefix; use `%BASE_URL%` / `import.meta.env.BASE_URL` instead.

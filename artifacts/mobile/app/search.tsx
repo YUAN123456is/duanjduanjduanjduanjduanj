@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import { View, Text, StyleSheet, Pressable, TextInput, FlatList, Image, SafeAreaView, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { useListDramas, getListDramasQueryKey } from "@workspace/api-client-react";
+import { useLocale, getLocalizedTitle } from "@/context/LocaleContext";
 import colors from "@/constants/colors";
 import { FontAwesome5 } from "@expo/vector-icons";
 
 export default function Search() {
   const router = useRouter();
+  const { locale, t } = useLocale();
   const [query, setQuery] = useState("");
   const [submittedQuery, setSubmittedQuery] = useState("");
 
@@ -27,7 +29,7 @@ export default function Search() {
           <FontAwesome5 name="search" solid size={14} color={colors.dark.secondaryForeground} />
           <TextInput
             style={styles.input}
-            placeholder="Search dramas..."
+            placeholder={t("search.placeholder")}
             placeholderTextColor={colors.dark.secondaryForeground}
             value={query}
             onChangeText={setQuery}
@@ -50,12 +52,12 @@ export default function Search() {
       ) : !hasSearched ? (
         <View style={styles.centered}>
           <FontAwesome5 name="search" solid size={40} color={colors.dark.secondary} />
-          <Text style={styles.hintText}>Search by drama title</Text>
+          <Text style={styles.hintText}>{t("search.hint")}</Text>
         </View>
       ) : (dramas ?? []).length === 0 ? (
         <View style={styles.centered}>
           <FontAwesome5 name="frown" regular size={40} color={colors.dark.secondary} />
-          <Text style={styles.hintText}>No results for "{submittedQuery}"</Text>
+          <Text style={styles.hintText}>{t("search.noResults", { q: submittedQuery })}</Text>
         </View>
       ) : (
         <FlatList
@@ -70,9 +72,9 @@ export default function Search() {
             >
               <Image source={{ uri: item.coverUrl }} style={styles.poster} />
               <View style={styles.freeBadge}>
-                <Text style={styles.freeText}>Free EP 1-{item.freeEpisodesCount}</Text>
+                <Text style={styles.freeText}>{t("home.free", { n: item.freeEpisodesCount })}</Text>
               </View>
-              <Text style={styles.title} numberOfLines={2}>{item.titleEn}</Text>
+              <Text style={styles.title} numberOfLines={2}>{getLocalizedTitle(item, locale)}</Text>
             </Pressable>
           )}
         />

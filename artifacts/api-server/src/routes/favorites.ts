@@ -28,6 +28,7 @@ router.get("/users/:userId/favorites", async (req, res): Promise<void> => {
       dramaId: favoritesTable.dramaId,
       createdAt: favoritesTable.createdAt,
       titleEn: dramasTable.titleEn,
+      titles: dramasTable.titles,
       coverUrl: dramasTable.coverUrl,
       freeEpisodesCount: dramasTable.freeEpisodesCount,
     })
@@ -68,6 +69,7 @@ router.put("/users/:userId/favorites/:dramaId", async (req, res): Promise<void> 
       dramaId: drama.id,
       createdAt: favorite.createdAt,
       titleEn: drama.titleEn,
+      titles: drama.titles,
       coverUrl: drama.coverUrl,
       freeEpisodesCount: drama.freeEpisodesCount,
     }),

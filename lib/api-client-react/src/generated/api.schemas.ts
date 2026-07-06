@@ -9,6 +9,17 @@ export interface HealthStatus {
   status: string;
 }
 
+export interface GeoLocale {
+  /** Detected locale code (e.g. 'en', 'es', 'ar', 'zh-Hant') */
+  locale: string;
+  /**
+     * Detected ISO country code, or null if lookup failed
+     * @nullable
+     */
+  country: string | null;
+  isRtl: boolean;
+}
+
 export type GlobalConfigActiveAdNetwork = typeof GlobalConfigActiveAdNetwork[keyof typeof GlobalConfigActiveAdNetwork];
 
 
@@ -47,13 +58,16 @@ export interface GlobalConfigUpdate {
   reviewModeActive?: boolean;
 }
 
+/**
+ * Per-locale title overrides, keyed by locale code (e.g. 'es', 'th', 'ar'). English falls back to titleEn.
+ */
+export type DramaTitles = {[key: string]: string};
+
 export interface Drama {
   id: string;
   titleEn: string;
-  /** @nullable */
-  titleEs?: string | null;
-  /** @nullable */
-  titleZhTw?: string | null;
+  /** Per-locale title overrides, keyed by locale code (e.g. 'es', 'th', 'ar'). English falls back to titleEn. */
+  titles: DramaTitles;
   coverUrl: string;
   /** @nullable */
   description?: string | null;
@@ -67,11 +81,16 @@ export interface Drama {
   createdAt: string;
 }
 
+/**
+ * Optional per-locale title overrides, keyed by locale code (e.g. 'es', 'th', 'ar'). English falls back to titleEn.
+ */
+export type DramaInputTitles = {[key: string]: string};
+
 export interface DramaInput {
   /** @minLength 1 */
   titleEn: string;
-  titleEs?: string;
-  titleZhTw?: string;
+  /** Optional per-locale title overrides, keyed by locale code (e.g. 'es', 'th', 'ar'). English falls back to titleEn. */
+  titles?: DramaInputTitles;
   coverUrl: string;
   description?: string;
   tags?: string[];
@@ -81,11 +100,16 @@ export interface DramaInput {
   isPublished?: boolean;
 }
 
+/**
+ * Optional per-locale title overrides, keyed by locale code (e.g. 'es', 'th', 'ar'). English falls back to titleEn.
+ */
+export type DramaUpdateTitles = {[key: string]: string};
+
 export interface DramaUpdate {
   /** @minLength 1 */
   titleEn?: string;
-  titleEs?: string;
-  titleZhTw?: string;
+  /** Optional per-locale title overrides, keyed by locale code (e.g. 'es', 'th', 'ar'). English falls back to titleEn. */
+  titles?: DramaUpdateTitles;
   coverUrl?: string;
   description?: string;
   tags?: string[];
@@ -218,9 +242,12 @@ export interface HomeSectionUpdate {
   sortOrder?: number;
 }
 
+export type HomeSectionDramaTitles = {[key: string]: string};
+
 export interface HomeSectionDrama {
   dramaId: string;
   titleEn: string;
+  titles?: HomeSectionDramaTitles;
   coverUrl: string;
   sortOrder: number;
 }
@@ -245,10 +272,13 @@ export interface HomeFeedSection {
   dramas: Drama[];
 }
 
+export type FavoriteDramaTitles = {[key: string]: string};
+
 export interface FavoriteDrama {
   dramaId: string;
   createdAt: string;
   titleEn: string;
+  titles?: FavoriteDramaTitles;
   coverUrl: string;
   freeEpisodesCount?: number;
 }
@@ -275,5 +305,6 @@ search?: string;
 export type GetDramaPlaybackParams = {
 dramaId: string;
 userId?: string;
+locale?: string;
 };
 

@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, Pressable, ScrollView, Alert, Modal } from "rea
 import { useRouter } from "expo-router";
 import { useAuth } from "@/context/AuthContext";
 import { useDrama } from "@/context/DramaContext";
+import { useLocale, getLocalizedTitle } from "@/context/LocaleContext";
+import { SUPPORTED_LOCALES } from "@/i18n/translations";
 import { useListDramas } from "@workspace/api-client-react";
 import colors from "@/constants/colors";
 import { FontAwesome5 } from "@expo/vector-icons";
@@ -12,9 +14,10 @@ export default function Profile() {
   const router = useRouter();
   const { provider, signOut } = useAuth();
   const { watchHistory, favorites } = useDrama();
+  const { locale, setLocale, t } = useLocale();
   const { data: dramas } = useListDramas({ publishedOnly: true });
   const [langModalVisible, setLangModalVisible] = useState(false);
-  const [language, setLanguage] = useState("English");
+  const currentLanguageLabel = SUPPORTED_LOCALES.find((l) => l.code === locale)?.label ?? "English";
 
   const historyDramas = Object.keys(watchHistory).map(id => {
     return { drama: dramas?.find(d => d.id === id), history: watchHistory[id] };
@@ -27,12 +30,12 @@ export default function Profile() {
 
   const handleDeleteAccount = () => {
     Alert.alert(
-      "Delete Account",
-      "Are you sure? This will permanently delete all your viewing progress and unlocked episodes.",
+      t("profile.deleteConfirmTitle"),
+      t("profile.deleteConfirmMsg"),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("profile.cancel"), style: "cancel" },
         { 
-          text: "Delete", 
+          text: t("profile.delete"), 
           style: "destructive", 
           onPress: async () => {
             await signOut();
@@ -53,29 +56,29 @@ export default function Profile() {
         <Pressable onPress={() => router.back()} style={styles.backButton}>
           <FontAwesome5 name="chevron-left" solid size={20} color={colors.dark.foreground} />
         </Pressable>
-        <Text style={styles.title}>Profile</Text>
+        <Text style={styles.title}>{t("profile.title")}</Text>
         <View style={styles.placeholder} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account</Text>
+          <Text style={styles.sectionTitle}>{t("profile.account")}</Text>
           <View style={styles.card}>
             <View style={styles.row}>
               <FontAwesome5 name="user-circle" solid size={24} color={colors.dark.secondaryForeground} />
               <Text style={styles.rowText}>
-                Signed in as {provider === "guest" ? "Guest" : provider}
+                {t("profile.signedInAs", { provider: provider === "guest" ? t("profile.guest") : (provider ?? "") })}
               </Text>
             </View>
             <Pressable style={styles.logoutButton} onPress={handleSignOut}>
-              <Text style={styles.logoutText}>Sign Out</Text>
+              <Text style={styles.logoutText}>{t("profile.signOut")}</Text>
             </Pressable>
           </View>
         </View>
 
         {favorites.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Favorites</Text>
+            <Text style={styles.sectionTitle}>{t("profile.favorites")}</Text>
             <View style={styles.card}>
               {favorites.map((fav, index) => (
                 <View key={fav.dramaId}>
@@ -83,7 +86,7 @@ export default function Profile() {
                     style={styles.historyRow}
                     onPress={() => router.push({ pathname: "/player", params: { dramaId: fav.dramaId } })}
                   >
-                    <Text style={styles.historyTitle} numberOfLines={1}>{fav.titleEn}</Text>
+                    <Text style={styles.historyTitle} numberOfLines={1}>{getLocalizedTitle(fav, locale)}</Text>
                     <FontAwesome5 name="bookmark" solid size={14} color={colors.dark.accent} />
                   </Pressable>
                   {index < favorites.length - 1 && <View style={styles.divider} />}
@@ -95,7 +98,7 @@ export default function Profile() {
 
         {historyDramas.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Watch History</Text>
+            <Text style={styles.sectionTitle}>{t("profile.watchHistory")}</Text>
             <View style={styles.card}>
               {historyDramas.map(({ drama, history }, index) => (
                 <View key={drama!.id}>
@@ -103,8 +106,8 @@ export default function Profile() {
                     style={styles.historyRow}
                     onPress={() => router.push({ pathname: "/player", params: { dramaId: drama!.id, initialEpisode: history.lastEpisode } })}
                   >
-                    <Text style={styles.historyTitle} numberOfLines={1}>{drama!.titleEn}</Text>
-                    <Text style={styles.historyEp}>EP {history.lastEpisode}</Text>
+                    <Text style={styles.historyTitle} numberOfLines={1}>{getLocalizedTitle(drama!, locale)}</Text>
+                    <Text style={styles.historyEp}>{t("home.ep", { n: history.lastEpisode })}</Text>
                   </Pressable>
                   {index < historyDramas.length - 1 && <View style={styles.divider} />}
                 </View>
@@ -114,12 +117,12 @@ export default function Profile() {
         )}
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Settings</Text>
+          <Text style={styles.sectionTitle}>{t("profile.settings")}</Text>
           <View style={styles.card}>
             <Pressable style={styles.menuRow} onPress={() => setLangModalVisible(true)}>
-              <Text style={styles.menuText}>Language</Text>
+              <Text style={styles.menuText}>{t("profile.language")}</Text>
               <View style={styles.menuRight}>
-                <Text style={styles.menuValue}>{language}</Text>
+                <Text style={styles.menuValue}>{currentLanguageLabel}</Text>
                 <FontAwesome5 name="chevron-right" solid size={12} color={colors.dark.secondaryForeground} />
               </View>
             </Pressable>
@@ -127,27 +130,27 @@ export default function Profile() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Support & Legal</Text>
+          <Text style={styles.sectionTitle}>{t("profile.supportLegal")}</Text>
           <View style={styles.card}>
             <Pressable style={styles.menuRow}>
-              <Text style={styles.menuText}>Report a problem</Text>
+              <Text style={styles.menuText}>{t("profile.report")}</Text>
               <FontAwesome5 name="chevron-right" solid size={12} color={colors.dark.secondaryForeground} />
             </Pressable>
             <View style={styles.divider} />
             <Pressable style={styles.menuRow} onPress={() => openLink("https://example.com/privacy")}>
-              <Text style={styles.menuText}>Privacy Policy</Text>
+              <Text style={styles.menuText}>{t("profile.privacy")}</Text>
               <FontAwesome5 name="chevron-right" solid size={12} color={colors.dark.secondaryForeground} />
             </Pressable>
             <View style={styles.divider} />
             <Pressable style={styles.menuRow} onPress={() => openLink("https://example.com/terms")}>
-              <Text style={styles.menuText}>Terms of Service</Text>
+              <Text style={styles.menuText}>{t("profile.terms")}</Text>
               <FontAwesome5 name="chevron-right" solid size={12} color={colors.dark.secondaryForeground} />
             </Pressable>
           </View>
         </View>
 
         <Pressable style={styles.deleteButton} onPress={handleDeleteAccount}>
-          <Text style={styles.deleteText}>Delete Account</Text>
+          <Text style={styles.deleteText}>{t("profile.deleteAccount")}</Text>
         </Pressable>
       </ScrollView>
 
@@ -155,17 +158,19 @@ export default function Profile() {
         <View style={styles.modalOverlay}>
           <Pressable style={styles.modalBackdrop} onPress={() => setLangModalVisible(false)} />
           <View style={styles.modalSheet}>
-            <Text style={styles.modalTitle}>Select Language</Text>
-            {["English", "Español", "繁體中文", "ไทย", "日本語"].map(lang => (
-              <Pressable 
-                key={lang} 
-                style={styles.langRow}
-                onPress={() => { setLanguage(lang); setLangModalVisible(false); }}
-              >
-                <Text style={[styles.langText, language === lang && styles.langTextActive]}>{lang}</Text>
-                {language === lang && <FontAwesome5 name="check" solid size={14} color={colors.dark.primary} />}
-              </Pressable>
-            ))}
+            <Text style={styles.modalTitle}>{t("profile.selectLanguage")}</Text>
+            <ScrollView style={{ maxHeight: 360 }}>
+              {SUPPORTED_LOCALES.map(({ code, label }) => (
+                <Pressable
+                  key={code}
+                  style={styles.langRow}
+                  onPress={() => { setLocale(code); setLangModalVisible(false); }}
+                >
+                  <Text style={[styles.langText, locale === code && styles.langTextActive]}>{label}</Text>
+                  {locale === code && <FontAwesome5 name="check" solid size={14} color={colors.dark.primary} />}
+                </Pressable>
+              ))}
+            </ScrollView>
           </View>
         </View>
       </Modal>

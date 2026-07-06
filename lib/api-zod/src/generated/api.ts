@@ -18,6 +18,16 @@ export const HealthCheckResponse = zod.object({
 
 
 /**
+ * @summary Detect the caller's language/region from their IP address
+ */
+export const GetGeoLocaleResponse = zod.object({
+  "locale": zod.string().describe('Detected locale code (e.g. \'en\', \'es\', \'ar\', \'zh-Hant\')'),
+  "country": zod.string().nullable().describe('Detected ISO country code, or null if lookup failed'),
+  "isRtl": zod.boolean()
+})
+
+
+/**
  * @summary Get the global ad & compliance configuration
  */
 export const GetGlobalConfigResponse = zod.object({
@@ -63,8 +73,7 @@ export const ListDramasQueryParams = zod.object({
 export const ListDramasResponseItem = zod.object({
   "id": zod.string(),
   "titleEn": zod.string(),
-  "titleEs": zod.string().nullish(),
-  "titleZhTw": zod.string().nullish(),
+  "titles": zod.record(zod.string(), zod.string()).describe('Per-locale title overrides, keyed by locale code (e.g. \'es\', \'th\', \'ar\'). English falls back to titleEn.'),
   "coverUrl": zod.string(),
   "description": zod.string().nullish(),
   "tags": zod.array(zod.string()),
@@ -87,8 +96,7 @@ export const ListDramasResponse = zod.array(ListDramasResponseItem)
 
 export const CreateDramaBody = zod.object({
   "titleEn": zod.string().min(1),
-  "titleEs": zod.string().optional(),
-  "titleZhTw": zod.string().optional(),
+  "titles": zod.record(zod.string(), zod.string()).optional().describe('Optional per-locale title overrides, keyed by locale code (e.g. \'es\', \'th\', \'ar\'). English falls back to titleEn.'),
   "coverUrl": zod.string(),
   "description": zod.string().optional(),
   "tags": zod.array(zod.string()).optional(),
@@ -101,8 +109,7 @@ export const CreateDramaBody = zod.object({
 export const CreateDramaResponse = zod.object({
   "id": zod.string(),
   "titleEn": zod.string(),
-  "titleEs": zod.string().nullish(),
-  "titleZhTw": zod.string().nullish(),
+  "titles": zod.record(zod.string(), zod.string()).describe('Per-locale title overrides, keyed by locale code (e.g. \'es\', \'th\', \'ar\'). English falls back to titleEn.'),
   "coverUrl": zod.string(),
   "description": zod.string().nullish(),
   "tags": zod.array(zod.string()),
@@ -126,8 +133,7 @@ export const GetDramaParams = zod.object({
 export const GetDramaResponse = zod.object({
   "id": zod.string(),
   "titleEn": zod.string(),
-  "titleEs": zod.string().nullish(),
-  "titleZhTw": zod.string().nullish(),
+  "titles": zod.record(zod.string(), zod.string()).describe('Per-locale title overrides, keyed by locale code (e.g. \'es\', \'th\', \'ar\'). English falls back to titleEn.'),
   "coverUrl": zod.string(),
   "description": zod.string().nullish(),
   "tags": zod.array(zod.string()),
@@ -163,8 +169,7 @@ export const UpdateDramaParams = zod.object({
 
 export const UpdateDramaBody = zod.object({
   "titleEn": zod.string().min(1).optional(),
-  "titleEs": zod.string().optional(),
-  "titleZhTw": zod.string().optional(),
+  "titles": zod.record(zod.string(), zod.string()).optional().describe('Optional per-locale title overrides, keyed by locale code (e.g. \'es\', \'th\', \'ar\'). English falls back to titleEn.'),
   "coverUrl": zod.string().optional(),
   "description": zod.string().optional(),
   "tags": zod.array(zod.string()).optional(),
@@ -177,8 +182,7 @@ export const UpdateDramaBody = zod.object({
 export const UpdateDramaResponse = zod.object({
   "id": zod.string(),
   "titleEn": zod.string(),
-  "titleEs": zod.string().nullish(),
-  "titleZhTw": zod.string().nullish(),
+  "titles": zod.record(zod.string(), zod.string()).describe('Per-locale title overrides, keyed by locale code (e.g. \'es\', \'th\', \'ar\'). English falls back to titleEn.'),
   "coverUrl": zod.string(),
   "description": zod.string().nullish(),
   "tags": zod.array(zod.string()),
@@ -207,7 +211,8 @@ export const DeleteDramaResponse = zod.void()
  */
 export const GetDramaPlaybackQueryParams = zod.object({
   "dramaId": zod.coerce.string(),
-  "userId": zod.coerce.string().optional()
+  "userId": zod.coerce.string().optional(),
+  "locale": zod.coerce.string().optional()
 })
 
 export const GetDramaPlaybackResponse = zod.object({
@@ -348,6 +353,7 @@ export const ListHomeSectionsResponseItem = zod.object({
   "dramas": zod.array(zod.object({
   "dramaId": zod.string(),
   "titleEn": zod.string(),
+  "titles": zod.record(zod.string(), zod.string()).optional(),
   "coverUrl": zod.string(),
   "sortOrder": zod.number()
 }))
@@ -375,6 +381,7 @@ export const CreateHomeSectionResponse = zod.object({
   "dramas": zod.array(zod.object({
   "dramaId": zod.string(),
   "titleEn": zod.string(),
+  "titles": zod.record(zod.string(), zod.string()).optional(),
   "coverUrl": zod.string(),
   "sortOrder": zod.number()
 }))
@@ -405,6 +412,7 @@ export const UpdateHomeSectionResponse = zod.object({
   "dramas": zod.array(zod.object({
   "dramaId": zod.string(),
   "titleEn": zod.string(),
+  "titles": zod.record(zod.string(), zod.string()).optional(),
   "coverUrl": zod.string(),
   "sortOrder": zod.number()
 }))
@@ -444,6 +452,7 @@ export const SetHomeSectionDramasResponse = zod.object({
   "dramas": zod.array(zod.object({
   "dramaId": zod.string(),
   "titleEn": zod.string(),
+  "titles": zod.record(zod.string(), zod.string()).optional(),
   "coverUrl": zod.string(),
   "sortOrder": zod.number()
 }))
@@ -460,8 +469,7 @@ export const GetHomeFeedResponseItem = zod.object({
   "dramas": zod.array(zod.object({
   "id": zod.string(),
   "titleEn": zod.string(),
-  "titleEs": zod.string().nullish(),
-  "titleZhTw": zod.string().nullish(),
+  "titles": zod.record(zod.string(), zod.string()).describe('Per-locale title overrides, keyed by locale code (e.g. \'es\', \'th\', \'ar\'). English falls back to titleEn.'),
   "coverUrl": zod.string(),
   "description": zod.string().nullish(),
   "tags": zod.array(zod.string()),
@@ -488,6 +496,7 @@ export const ListFavoritesResponseItem = zod.object({
   "dramaId": zod.string(),
   "createdAt": zod.coerce.date(),
   "titleEn": zod.string(),
+  "titles": zod.record(zod.string(), zod.string()).optional(),
   "coverUrl": zod.string(),
   "freeEpisodesCount": zod.number().optional()
 })
@@ -506,6 +515,7 @@ export const AddFavoriteResponse = zod.object({
   "dramaId": zod.string(),
   "createdAt": zod.coerce.date(),
   "titleEn": zod.string(),
+  "titles": zod.record(zod.string(), zod.string()).optional(),
   "coverUrl": zod.string(),
   "freeEpisodesCount": zod.number().optional()
 })

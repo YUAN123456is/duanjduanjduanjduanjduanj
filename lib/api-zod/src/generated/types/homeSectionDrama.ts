@@ -5,10 +5,12 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { HomeSectionDramaTitles } from './homeSectionDramaTitles';
 
 export interface HomeSectionDrama {
   dramaId: string;
   titleEn: string;
+  titles?: HomeSectionDramaTitles;
   coverUrl: string;
   sortOrder: number;
 }

@@ -26,6 +26,7 @@ async function loadSectionWithDramas(sectionId: string) {
       dramaId: dramaHomeSectionsTable.dramaId,
       sortOrder: dramaHomeSectionsTable.sortOrder,
       titleEn: dramasTable.titleEn,
+      titles: dramasTable.titles,
       coverUrl: dramasTable.coverUrl,
     })
     .from(dramaHomeSectionsTable)

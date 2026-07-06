@@ -9,4 +9,5 @@
 export type GetDramaPlaybackParams = {
 dramaId: string;
 userId?: string;
+locale?: string;
 };

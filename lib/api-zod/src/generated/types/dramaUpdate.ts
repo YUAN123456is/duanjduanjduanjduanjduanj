@@ -5,12 +5,13 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { DramaUpdateTitles } from './dramaUpdateTitles';
 
 export interface DramaUpdate {
   /** @minLength 1 */
   titleEn?: string;
-  titleEs?: string;
-  titleZhTw?: string;
+  /** Optional per-locale title overrides, keyed by locale code (e.g. 'es', 'th', 'ar'). English falls back to titleEn. */
+  titles?: DramaUpdateTitles;
   coverUrl?: string;
   description?: string;
   tags?: string[];

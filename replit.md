@@ -29,6 +29,12 @@ A short-drama (micro-drama) streaming app for mobile — vertical swipe-through 
 - `artifacts/api-server` — real Express API backing both the mobile app and admin panel (dramas/episodes/users/unlocks/global config routes, Postgres + Drizzle)
 - `artifacts/admin` — DramaVerse Admin, a React + Vite panel for managing dramas, episodes, and global monetization/ad settings, fully wired to the live API
 - `artifacts/mockup-sandbox` — scaffolded but not yet used by this product
+- `artifacts/landing` — DramaVerse Landing, the H5 marketing page (Vite + React, previewPath `/landing/`). Cinematic dark-theme hero/features/how-it-works/testimonials/FAQ/CTA sections with scroll animations (framer-motion), download CTAs, and a footer language switcher; images in `artifacts/landing/public/images/`.
+- `artifacts/landing/src/context/LocaleContext.tsx` — detects locale via `GET /api/geo/locale` (IP-based, not device locale) on first load, persists manual override in localStorage (`landing_locale_override`), sets `document.documentElement.lang/dir` and injects locale-specific Google Fonts for non-Latin scripts.
+- `artifacts/landing/src/i18n/` — `locales.ts` (same 10-locale set as mobile: en default + es, pt, ar[rtl], th, vi, id, ja, ko, zh-Hant, with font hrefs) and `translations.ts` (full copy catalog, all keys translated across all 10 locales).
+- `artifacts/api-server/src/routes/geo.ts` — `GET /api/geo/locale` endpoint: extracts client IP, looks up country via ip-api.com (2s timeout, fails closed to `en`/non-rtl), maps country to one of the 10 supported locales.
+- `artifacts/mobile/i18n/translations.ts` — i18n catalog: `SUPPORTED_LOCALES` (en default + es, pt, ar, th, vi, id, ja, ko, zh-Hant; `ar` flagged `rtl: true`) and full UI string translations for onboarding/login/home/search/profile.
+- `artifacts/mobile/context/LocaleContext.tsx` — `LocaleProvider`/`useLocale()`/`getLocalizedTitle()`. Detects device locale via `expo-localization` on first launch, persists a manual override in AsyncStorage (`locale_override`), exposes `t()` for string lookup and `isRtl`.
 
 ## Architecture decisions
 
@@ -38,6 +44,8 @@ A short-drama (micro-drama) streaming app for mobile — vertical swipe-through 
 - Real backend is live: Postgres schema for dramas/episodes/users/unlocked-episodes + global config, seeded with 5 dramas/84 episodes. Mobile app and admin panel both consume it through the same OpenAPI-generated hooks. Unlock state (`isUnlocked` per episode) is computed server-side in `GET /api/dramas/playback`, not client-side.
 - Home screen supports curated, admin-managed sections (`home_sections` + `drama_home_sections` tables) in addition to the default drama list; managed from the admin panel's Home Sections page.
 - Favorites and watch-progress are server-persisted (`favorites`, `watch_progress` tables), keyed by `userId` (device-scoped, not full account sync — no cross-device login required). Mobile `DramaContext` reads/writes these via `@workspace/api-client-react` hooks; no client-only fallback state.
+- App-side i18n (mobile): device system locale drives UI language on first launch (via `expo-localization`), not IP — this is a deliberate requirement since the app itself isn't geo-gated. A manual language picker on the Profile screen can override the detected locale. Drama titles are stored per-locale in a `titles` jsonb map on `dramasTable` (replacing the old hardcoded `titleEs`/`titleZhTw` columns); `titleEn` remains the required fallback for any locale without a translated title. The admin panel's Drama edit form exposes one text field per supported locale in `ADDITIONAL_LOCALES`, all optional except English. `GET /api/dramas/playback` accepts an optional `locale` query param so the player's title is also server-localized, matching the client-side `getLocalizedTitle()` used everywhere else (home feed, search, favorites).
+- H5 landing page (`artifacts/landing`) uses IP-based language/region detection (`GET /api/geo/locale`) instead of device locale, since it's a public web page hit before any app/device context exists — deliberately a different detection strategy from the mobile app. Same 10-locale set as mobile, with a manual override picker in the footer that takes precedence over IP detection.
 
 ## Product
 
@@ -56,6 +64,7 @@ A short-drama (micro-drama) streaming app for mobile — vertical swipe-through 
 - Artifact workflow names differ from the artifact slug — use `listWorkflows()` to get the exact registered name (e.g. the mobile app's workflow is `artifacts/mobile: expo`, not `mobile`).
 - Expo bypasses the shared proxy, so `@workspace/api-client-react`'s `setBaseUrl` must be called at module top-level in `_layout.tsx` with `EXPO_PUBLIC_DOMAIN`, not a relative URL.
 - In Express route files, register more specific static paths (e.g. `/dramas/playback`) before dynamic `:param` routes on the same prefix (e.g. `/dramas/:dramaId`) — otherwise the param route silently swallows the static one.
+- In any artifact's `index.html`, static asset refs (favicon, etc.) must use Vite's `%BASE_URL%` placeholder (e.g. `href="%BASE_URL%favicon.svg"`), not a root-relative `/favicon.svg` — the latter 404s under the artifact's path-prefix proxy. Same rule applies to image `src`/CSS `url()` in app code: use `` `${import.meta.env.BASE_URL}images/...` ``, not `/images/...`.
 
 ## Pointers
 

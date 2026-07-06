@@ -2,11 +2,13 @@ import React from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/context/AuthContext";
+import { useLocale } from "@/context/LocaleContext";
 import colors from "@/constants/colors";
 import { FontAwesome5 } from "@expo/vector-icons";
 
 export default function Login() {
   const { signIn } = useAuth();
+  const { t } = useLocale();
   const router = useRouter();
 
   const handleLogin = async (provider: "apple" | "google" | "guest") => {
@@ -17,21 +19,21 @@ export default function Login() {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>Sign In</Text>
-        <Text style={styles.subtitle}>Save your progress and favorites.</Text>
+        <Text style={styles.title}>{t("login.title")}</Text>
+        <Text style={styles.subtitle}>{t("login.subtitle")}</Text>
       </View>
       <View style={styles.buttonContainer}>
         <Pressable style={styles.button} onPress={() => handleLogin("apple")}>
           <FontAwesome5 name="apple" brand size={20} color={colors.dark.foreground} style={styles.icon} />
-          <Text style={styles.buttonText}>Sign in with Apple</Text>
+          <Text style={styles.buttonText}>{t("login.apple")}</Text>
         </Pressable>
         <Pressable style={styles.button} onPress={() => handleLogin("google")}>
           <FontAwesome5 name="google" brand size={20} color={colors.dark.foreground} style={styles.icon} />
-          <Text style={styles.buttonText}>Sign in with Google</Text>
+          <Text style={styles.buttonText}>{t("login.google")}</Text>
         </Pressable>
         <Pressable style={styles.button} onPress={() => handleLogin("guest")}>
           <FontAwesome5 name="user" solid size={20} color={colors.dark.foreground} style={styles.icon} />
-          <Text style={styles.buttonText}>Continue as Guest</Text>
+          <Text style={styles.buttonText}>{t("login.guest")}</Text>
         </Pressable>
       </View>
     </View>

@@ -19,6 +19,7 @@ interface WatchHistoryEntry {
 interface FavoriteEntry {
   dramaId: string;
   titleEn: string;
+  titles?: Record<string, string> | null;
   coverUrl: string;
   freeEpisodesCount?: number;
   createdAt: string;

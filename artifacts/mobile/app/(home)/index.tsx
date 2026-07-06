@@ -3,12 +3,14 @@ import { View, Text, StyleSheet, ScrollView, Pressable, Image, SafeAreaView, Act
 import { useRouter } from "expo-router";
 import { useListDramas, useGetHomeFeed } from "@workspace/api-client-react";
 import { useDrama } from "@/context/DramaContext";
+import { useLocale, getLocalizedTitle } from "@/context/LocaleContext";
 import colors from "@/constants/colors";
 import { FontAwesome5 } from "@expo/vector-icons";
 
 export default function Home() {
   const router = useRouter();
-  const [activeCategory, setActiveCategory] = useState("All");
+  const { locale, t } = useLocale();
+  const [activeCategory, setActiveCategory] = useState(t("home.all"));
   const { watchHistory } = useDrama();
 
   const { data: dramas, isLoading, isError, refetch } = useListDramas({ publishedOnly: true });
@@ -17,13 +19,13 @@ export default function Home() {
   const categories = useMemo(() => {
     const tagSet = new Set<string>();
     (dramas ?? []).forEach((drama) => drama.tags.forEach((tag) => tagSet.add(tag)));
-    return ["All", ...Array.from(tagSet)];
-  }, [dramas]);
+    return [t("home.all"), ...Array.from(tagSet)];
+  }, [dramas, t]);
 
   const filtered = useMemo(() => {
     if (!dramas) return [];
-    return activeCategory === "All" ? dramas : dramas.filter((d) => d.tags.includes(activeCategory));
-  }, [dramas, activeCategory]);
+    return activeCategory === t("home.all") ? dramas : dramas.filter((d) => d.tags.includes(activeCategory));
+  }, [dramas, activeCategory, t]);
 
   const historyDramas = useMemo(() => {
     if (!dramas) return [];
@@ -43,9 +45,9 @@ export default function Home() {
   if (isError) {
     return (
       <SafeAreaView style={[styles.safeArea, styles.centered]}>
-        <Text style={styles.errorText}>Couldn't load dramas.</Text>
+        <Text style={styles.errorText}>{t("home.loadError")}</Text>
         <Pressable style={styles.retryButton} onPress={() => refetch()}>
-          <Text style={styles.retryButtonText}>Retry</Text>
+          <Text style={styles.retryButtonText}>{t("home.retry")}</Text>
         </Pressable>
       </SafeAreaView>
     );
@@ -54,7 +56,7 @@ export default function Home() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
-        <Text style={styles.logo}>DramaVerse</Text>
+        <Text style={styles.logo}>{t("home.logo")}</Text>
         <View style={styles.headerActions}>
           <Pressable onPress={() => router.push("/search")} hitSlop={12}>
             <FontAwesome5 name="search" solid size={22} color={colors.dark.foreground} />
@@ -68,7 +70,7 @@ export default function Home() {
       <ScrollView showsVerticalScrollIndicator={false}>
         {historyDramas.length > 0 && (
           <View style={styles.historySection}>
-            <Text style={styles.sectionTitle}>Continue Watching</Text>
+            <Text style={styles.sectionTitle}>{t("home.continueWatching")}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.historyScroll}>
               {historyDramas.map(({ drama, history }) => (
                 <Pressable
@@ -78,8 +80,8 @@ export default function Home() {
                 >
                   <Image source={{ uri: drama.coverUrl }} style={styles.historyPoster} />
                   <View style={styles.historyInfo}>
-                    <Text style={styles.historyTitle} numberOfLines={1}>{drama.titleEn}</Text>
-                    <Text style={styles.historyEp}>EP {history.lastEpisode}</Text>
+                    <Text style={styles.historyTitle} numberOfLines={1}>{getLocalizedTitle(drama, locale)}</Text>
+                    <Text style={styles.historyEp}>{t("home.ep", { n: history.lastEpisode })}</Text>
                   </View>
                 </Pressable>
               ))}
@@ -99,9 +101,9 @@ export default function Home() {
                 >
                   <Image source={{ uri: drama.coverUrl }} style={styles.curatedPoster} />
                   <View style={styles.freeBadgeSmall}>
-                    <Text style={styles.freeText}>Free EP 1-{drama.freeEpisodesCount}</Text>
+                    <Text style={styles.freeText}>{t("home.free", { n: drama.freeEpisodesCount })}</Text>
                   </View>
-                  <Text style={styles.curatedTitle} numberOfLines={2}>{drama.titleEn}</Text>
+                  <Text style={styles.curatedTitle} numberOfLines={2}>{getLocalizedTitle(drama, locale)}</Text>
                 </Pressable>
               ))}
             </ScrollView>
@@ -131,9 +133,9 @@ export default function Home() {
             >
               <Image source={{ uri: drama.coverUrl }} style={styles.poster} />
               <View style={styles.freeBadge}>
-                <Text style={styles.freeText}>Free EP 1-{drama.freeEpisodesCount}</Text>
+                <Text style={styles.freeText}>{t("home.free", { n: drama.freeEpisodesCount })}</Text>
               </View>
-              <Text style={styles.title} numberOfLines={2}>{drama.titleEn}</Text>
+              <Text style={styles.title} numberOfLines={2}>{getLocalizedTitle(drama, locale)}</Text>
             </Pressable>
           ))}
         </View>

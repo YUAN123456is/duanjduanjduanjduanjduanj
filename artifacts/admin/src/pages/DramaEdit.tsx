@@ -24,10 +24,25 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Clock, GripVertical, Image as ImageIcon, PlaySquare, Plus, Save, Settings2, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
+export const ADDITIONAL_LOCALES: { code: string; label: string }[] = [
+  { code: "es", label: "Spanish" },
+  { code: "pt", label: "Portuguese" },
+  { code: "ar", label: "Arabic" },
+  { code: "th", label: "Thai" },
+  { code: "vi", label: "Vietnamese" },
+  { code: "id", label: "Indonesian" },
+  { code: "ja", label: "Japanese" },
+  { code: "ko", label: "Korean" },
+  { code: "zh-Hant", label: "Chinese (Traditional)" },
+];
+
+const titlesSchema = z.object(
+  Object.fromEntries(ADDITIONAL_LOCALES.map((l) => [l.code, z.string().optional()])),
+);
+
 const metadataSchema = z.object({
   titleEn: z.string().min(1, "English title is required"),
-  titleEs: z.string().optional(),
-  titleZhTw: z.string().optional(),
+  titles: titlesSchema,
   coverUrl: z.string().url("Must be a valid URL"),
   description: z.string().optional(),
   tags: z.string(), // We'll parse this to array
@@ -103,10 +118,12 @@ export default function DramaEdit() {
     }
   });
 
+  const emptyTitles = Object.fromEntries(ADDITIONAL_LOCALES.map((l) => [l.code, ""]));
+
   const metaForm = useForm<z.infer<typeof metadataSchema>>({
     resolver: zodResolver(metadataSchema),
     defaultValues: {
-      titleEn: "", titleEs: "", titleZhTw: "", coverUrl: "", description: "", tags: "", isPublished: false
+      titleEn: "", titles: emptyTitles, coverUrl: "", description: "", tags: "", isPublished: false
     }
   });
 
@@ -124,8 +141,7 @@ export default function DramaEdit() {
     if (drama) {
       metaForm.reset({
         titleEn: drama.titleEn,
-        titleEs: drama.titleEs || "",
-        titleZhTw: drama.titleZhTw || "",
+        titles: { ...emptyTitles, ...(drama.titles || {}) },
         coverUrl: drama.coverUrl,
         description: drama.description || "",
         tags: drama.tags ? drama.tags.join(", ") : "",
@@ -140,12 +156,15 @@ export default function DramaEdit() {
   }, [drama, metaForm, rulesForm]);
 
   function onMetaSubmit(values: z.infer<typeof metadataSchema>) {
+    const titles: Record<string, string> = {};
+    for (const [code, value] of Object.entries(values.titles || {})) {
+      if (value && value.trim().length > 0) titles[code] = value;
+    }
     updateDrama.mutate({
       dramaId: id,
       data: {
         titleEn: values.titleEn,
-        titleEs: values.titleEs || undefined,
-        titleZhTw: values.titleZhTw || undefined,
+        titles,
         coverUrl: values.coverUrl,
         description: values.description || undefined,
         tags: values.tags ? values.tags.split(",").map(t => t.trim()).filter(Boolean) : [],
@@ -278,26 +297,19 @@ export default function DramaEdit() {
                         )}
                       />
                       <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={metaForm.control}
-                          name="titleEs"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Spanish Title (Optional)</FormLabel>
-                              <FormControl><Input {...field} /></FormControl>
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={metaForm.control}
-                          name="titleZhTw"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Traditional Chinese Title (Optional)</FormLabel>
-                              <FormControl><Input {...field} /></FormControl>
-                            </FormItem>
-                          )}
-                        />
+                        {ADDITIONAL_LOCALES.map((locale) => (
+                          <FormField
+                            key={locale.code}
+                            control={metaForm.control}
+                            name={`titles.${locale.code}` as any}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>{locale.label} Title (Optional)</FormLabel>
+                                <FormControl><Input {...field} value={field.value ?? ""} /></FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        ))}
                       </div>
                       <FormField
                         control={metaForm.control}

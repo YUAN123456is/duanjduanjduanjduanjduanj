@@ -5,11 +5,13 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { FavoriteDramaTitles } from './favoriteDramaTitles';
 
 export interface FavoriteDrama {
   dramaId: string;
   createdAt: Date;
   titleEn: string;
+  titles?: FavoriteDramaTitles;
   coverUrl: string;
   freeEpisodesCount?: number;
 }

@@ -1,12 +1,11 @@
-import { pgTable, text, integer, boolean, timestamp, uuid } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, boolean, timestamp, uuid, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
 export const dramasTable = pgTable("dramas", {
   id: uuid("id").primaryKey().defaultRandom(),
   titleEn: text("title_en").notNull(),
-  titleEs: text("title_es"),
-  titleZhTw: text("title_zh_tw"),
+  titles: jsonb("titles").$type<Record<string, string>>().notNull().default({}),
   coverUrl: text("cover_url").notNull(),
   description: text("description"),
   tags: text("tags").array().notNull().default([]),

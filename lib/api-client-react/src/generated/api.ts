@@ -30,6 +30,7 @@ import type {
   EpisodeInput,
   EpisodeUpdate,
   FavoriteDrama,
+  GeoLocale,
   GetDramaPlaybackParams,
   GlobalConfig,
   GlobalConfigUpdate,
@@ -141,6 +142,83 @@ export function useHealthCheck<TData = Awaited<ReturnType<typeof healthCheck>>, 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getHealthCheckQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetGeoLocaleUrl = () => {
+
+
+
+
+  return `/api/geo/locale`
+}
+
+/**
+ * @summary Detect the caller's language/region from their IP address
+ */
+export const getGeoLocale = async ( options?: RequestInit): Promise<GeoLocale> => {
+
+  return customFetch<GeoLocale>(getGetGeoLocaleUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGeoLocaleQueryKey = () => {
+    return [
+    `/api/geo/locale`
+    ] as const;
+    }
+
+
+export const getGetGeoLocaleQueryOptions = <TData = Awaited<ReturnType<typeof getGeoLocale>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGeoLocale>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGeoLocaleQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGeoLocale>>> = ({ signal }) => getGeoLocale({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGeoLocale>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetGeoLocaleQueryResult = NonNullable<Awaited<ReturnType<typeof getGeoLocale>>>
+export type GetGeoLocaleQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Detect the caller's language/region from their IP address
+ */
+
+export function useGetGeoLocale<TData = Awaited<ReturnType<typeof getGeoLocale>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGeoLocale>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetGeoLocaleQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

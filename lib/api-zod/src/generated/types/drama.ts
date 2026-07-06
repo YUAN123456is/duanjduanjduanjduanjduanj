@@ -5,14 +5,13 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { DramaTitles } from './dramaTitles';
 
 export interface Drama {
   id: string;
   titleEn: string;
-  /** @nullable */
-  titleEs?: string | null;
-  /** @nullable */
-  titleZhTw?: string | null;
+  /** Per-locale title overrides, keyed by locale code (e.g. 'es', 'th', 'ar'). English falls back to titleEn. */
+  titles: DramaTitles;
   coverUrl: string;
   /** @nullable */
   description?: string | null;
