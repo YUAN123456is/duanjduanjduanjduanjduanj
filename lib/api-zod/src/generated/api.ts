@@ -296,6 +296,49 @@ export const DeleteEpisodeResponse = zod.void()
 
 
 /**
+ * @summary Bulk create/update episodes for a drama (admin). Rows matching an existing episodeNumber are updated in place; others are inserted.
+ */
+export const BatchCreateEpisodesParams = zod.object({
+  "dramaId": zod.coerce.string()
+})
+
+export const BatchCreateEpisodesBody = zod.object({
+  "episodes": zod.array(zod.object({
+  "episodeNumber": zod.number(),
+  "title": zod.string().optional(),
+  "videoUrl": zod.string(),
+  "duration": zod.number().optional()
+}))
+})
+
+export const BatchCreateEpisodesResponse = zod.object({
+  "episodes": zod.array(zod.object({
+  "id": zod.string(),
+  "dramaId": zod.string(),
+  "episodeNumber": zod.number(),
+  "title": zod.string().nullish(),
+  "videoUrl": zod.string(),
+  "duration": zod.number(),
+  "createdAt": zod.coerce.date()
+})),
+  "createdCount": zod.number(),
+  "updatedCount": zod.number()
+})
+
+
+/**
+ * @summary Delete multiple episodes at once (admin)
+ */
+export const BatchDeleteEpisodesBody = zod.object({
+  "episodeIds": zod.array(zod.string())
+})
+
+export const BatchDeleteEpisodesResponse = zod.object({
+  "deletedCount": zod.number()
+})
+
+
+/**
  * @summary Unlock a batch of episodes after a rewarded ad completes
  */
 export const UnlockEpisodesBody = zod.object({

@@ -20,6 +20,10 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  BatchCreateEpisodesInput,
+  BatchCreateEpisodesResult,
+  BatchDeleteEpisodesInput,
+  BatchDeleteEpisodesResult,
   DashboardSummary,
   Drama,
   DramaInput,
@@ -1044,6 +1048,147 @@ export const useDeleteEpisode = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getDeleteEpisodeMutationOptions(options));
+    }
+
+export const getBatchCreateEpisodesUrl = (dramaId: string,) => {
+
+
+
+
+  return `/api/dramas/${dramaId}/episodes/batch`
+}
+
+/**
+ * @summary Bulk create/update episodes for a drama (admin). Rows matching an existing episodeNumber are updated in place; others are inserted.
+ */
+export const batchCreateEpisodes = async (dramaId: string,
+    batchCreateEpisodesInput: BatchCreateEpisodesInput, options?: RequestInit): Promise<BatchCreateEpisodesResult> => {
+
+  return customFetch<BatchCreateEpisodesResult>(getBatchCreateEpisodesUrl(dramaId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(batchCreateEpisodesInput)
+  }
+);}
+
+
+
+
+export const getBatchCreateEpisodesMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof batchCreateEpisodes>>, TError,{dramaId: string;data: BodyType<BatchCreateEpisodesInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof batchCreateEpisodes>>, TError,{dramaId: string;data: BodyType<BatchCreateEpisodesInput>}, TContext> => {
+
+const mutationKey = ['batchCreateEpisodes'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof batchCreateEpisodes>>, {dramaId: string;data: BodyType<BatchCreateEpisodesInput>}> = (props) => {
+          const {dramaId,data} = props ?? {};
+
+          return  batchCreateEpisodes(dramaId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type BatchCreateEpisodesMutationResult = NonNullable<Awaited<ReturnType<typeof batchCreateEpisodes>>>
+    export type BatchCreateEpisodesMutationBody = BodyType<BatchCreateEpisodesInput>
+    export type BatchCreateEpisodesMutationError = ErrorType<void>
+
+    /**
+ * @summary Bulk create/update episodes for a drama (admin). Rows matching an existing episodeNumber are updated in place; others are inserted.
+ */
+export const useBatchCreateEpisodes = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof batchCreateEpisodes>>, TError,{dramaId: string;data: BodyType<BatchCreateEpisodesInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof batchCreateEpisodes>>,
+        TError,
+        {dramaId: string;data: BodyType<BatchCreateEpisodesInput>},
+        TContext
+      > => {
+      return useMutation(getBatchCreateEpisodesMutationOptions(options));
+    }
+
+export const getBatchDeleteEpisodesUrl = () => {
+
+
+
+
+  return `/api/episodes/batch-delete`
+}
+
+/**
+ * @summary Delete multiple episodes at once (admin)
+ */
+export const batchDeleteEpisodes = async (batchDeleteEpisodesInput: BatchDeleteEpisodesInput, options?: RequestInit): Promise<BatchDeleteEpisodesResult> => {
+
+  return customFetch<BatchDeleteEpisodesResult>(getBatchDeleteEpisodesUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(batchDeleteEpisodesInput)
+  }
+);}
+
+
+
+
+export const getBatchDeleteEpisodesMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof batchDeleteEpisodes>>, TError,{data: BodyType<BatchDeleteEpisodesInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof batchDeleteEpisodes>>, TError,{data: BodyType<BatchDeleteEpisodesInput>}, TContext> => {
+
+const mutationKey = ['batchDeleteEpisodes'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof batchDeleteEpisodes>>, {data: BodyType<BatchDeleteEpisodesInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  batchDeleteEpisodes(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type BatchDeleteEpisodesMutationResult = NonNullable<Awaited<ReturnType<typeof batchDeleteEpisodes>>>
+    export type BatchDeleteEpisodesMutationBody = BodyType<BatchDeleteEpisodesInput>
+    export type BatchDeleteEpisodesMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete multiple episodes at once (admin)
+ */
+export const useBatchDeleteEpisodes = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof batchDeleteEpisodes>>, TError,{data: BodyType<BatchDeleteEpisodesInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof batchDeleteEpisodes>>,
+        TError,
+        {data: BodyType<BatchDeleteEpisodesInput>},
+        TContext
+      > => {
+      return useMutation(getBatchDeleteEpisodesMutationOptions(options));
     }
 
 export const getUnlockEpisodesUrl = () => {

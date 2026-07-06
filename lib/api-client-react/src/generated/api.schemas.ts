@@ -148,6 +148,24 @@ export interface EpisodeUpdate {
   duration?: number;
 }
 
+export interface BatchCreateEpisodesInput {
+  episodes: EpisodeInput[];
+}
+
+export interface BatchCreateEpisodesResult {
+  episodes: Episode[];
+  createdCount: number;
+  updatedCount: number;
+}
+
+export interface BatchDeleteEpisodesInput {
+  episodeIds: string[];
+}
+
+export interface BatchDeleteEpisodesResult {
+  deletedCount: number;
+}
+
 export interface MonetizationRules {
   freeEpisodesCount: number;
   episodesPerAdUnlock: number;

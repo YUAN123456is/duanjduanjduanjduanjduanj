@@ -6,6 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './batchCreateEpisodesInput';
+export * from './batchCreateEpisodesResult';
+export * from './batchDeleteEpisodesInput';
+export * from './batchDeleteEpisodesResult';
 export * from './dashboardSummary';
 export * from './drama';
 export * from './dramaInput';

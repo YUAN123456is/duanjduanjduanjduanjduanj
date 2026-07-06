@@ -288,6 +288,52 @@ paths:
         "404":
           description: Not found
 
+  /dramas/{dramaId}/episodes/batch:
+    post:
+      operationId: batchCreateEpisodes
+      tags: [episodes]
+      summary: Bulk create/update episodes for a drama (admin). Rows matching an existing episodeNumber are updated in place; others are inserted.
+      parameters:
+        - name: dramaId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BatchCreateEpisodesInput"
+      responses:
+        "200":
+          description: Resulting full episode list for the drama
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BatchCreateEpisodesResult"
+        "404":
+          description: Drama not found
+
+  /episodes/batch-delete:
+    post:
+      operationId: batchDeleteEpisodes
+      tags: [episodes]
+      summary: Delete multiple episodes at once (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BatchDeleteEpisodesInput"
+      responses:
+        "200":
+          description: Number of episodes deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BatchDeleteEpisodesResult"
+
   /episodes/unlock:
     post:
       operationId: unlockEpisodes
@@ -813,6 +859,50 @@ components:
         videoUrl:
           type: string
         duration:
+          type: integer
+
+    BatchCreateEpisodesInput:
+      type: object
+      required:
+        - episodes
+      properties:
+        episodes:
+          type: array
+          items:
+            $ref: "#/components/schemas/EpisodeInput"
+
+    BatchCreateEpisodesResult:
+      type: object
+      required:
+        - episodes
+        - createdCount
+        - updatedCount
+      properties:
+        episodes:
+          type: array
+          items:
+            $ref: "#/components/schemas/Episode"
+        createdCount:
+          type: integer
+        updatedCount:
+          type: integer
+
+    BatchDeleteEpisodesInput:
+      type: object
+      required:
+        - episodeIds
+      properties:
+        episodeIds:
+          type: array
+          items:
+            type: string
+
+    BatchDeleteEpisodesResult:
+      type: object
+      required:
+        - deletedCount
+      properties:
+        deletedCount:
           type: integer
 
     MonetizationRules:

@@ -5,7 +5,9 @@ import {
   useUpdateDrama, 
   useCreateEpisode, 
   useUpdateEpisode, 
-  useDeleteEpisode 
+  useDeleteEpisode,
+  useBatchCreateEpisodes,
+  useBatchDeleteEpisodes
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -15,14 +17,95 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Clock, GripVertical, Image as ImageIcon, PlaySquare, Plus, Save, Settings2, Trash2 } from "lucide-react";
+import { AlertCircle, ArrowLeft, Clock, FileUp, GripVertical, Image as ImageIcon, PlaySquare, Plus, Save, Settings2, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+
+interface ParsedEpisodeRow {
+  episodeNumber: number;
+  videoUrl: string;
+  raw: string;
+}
+
+interface CsvParseResult {
+  rows: ParsedEpisodeRow[];
+  errors: string[];
+}
+
+// Parses a single CSV line respecting double-quoted fields (commas inside quotes are not split on).
+function parseCsvLine(line: string): string[] {
+  const fields: string[] = [];
+  let current = "";
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (inQuotes) {
+      if (char === '"') {
+        if (line[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        current += char;
+      }
+    } else if (char === '"') {
+      inQuotes = true;
+    } else if (char === ',') {
+      fields.push(current);
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+  fields.push(current);
+  return fields.map((f) => f.trim());
+}
+
+// Parses the "集数,视频流文件路径" CSV format: rows like `第 1 集,"https://...m3u8"`.
+function parseEpisodeCsv(text: string): CsvParseResult {
+  const cleaned = text.replace(/^\ufeff/, "");
+  const lines = cleaned.split(/\r?\n/).filter((l) => l.trim().length > 0);
+  const rows: ParsedEpisodeRow[] = [];
+  const errors: string[] = [];
+
+  let startIndex = 0;
+  if (lines.length > 0) {
+    const firstFields = parseCsvLine(lines[0]);
+    if (firstFields[0] && !/\d/.test(firstFields[0])) {
+      startIndex = 1; // skip header row
+    }
+  }
+
+  for (let i = startIndex; i < lines.length; i++) {
+    const lineNum = i + 1;
+    const fields = parseCsvLine(lines[i]);
+    if (fields.length < 2 || !fields[0] || !fields[1]) {
+      errors.push(`Line ${lineNum}: could not read episode number/URL — "${lines[i]}"`);
+      continue;
+    }
+    const numMatch = fields[0].match(/(\d+)/);
+    if (!numMatch) {
+      errors.push(`Line ${lineNum}: no episode number found in "${fields[0]}"`);
+      continue;
+    }
+    const url = fields[1].trim();
+    if (!/^https?:\/\//i.test(url)) {
+      errors.push(`Line ${lineNum}: "${url}" doesn't look like a valid URL`);
+      continue;
+    }
+    rows.push({ episodeNumber: parseInt(numMatch[1], 10), videoUrl: url, raw: lines[i] });
+  }
+
+  return { rows, errors };
+}
 
 export const ADDITIONAL_LOCALES: { code: string; label: string }[] = [
   { code: "es", label: "Spanish" },
@@ -71,6 +154,10 @@ export default function DramaEdit() {
   const [activeTab, setActiveTab] = useState("metadata");
   const [editingEpisode, setEditingEpisode] = useState<any>(null);
   const [isEpisodeModalOpen, setIsEpisodeModalOpen] = useState(false);
+  const [selectedEpisodeIds, setSelectedEpisodeIds] = useState<Set<string>>(new Set());
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
+  const [bulkCsvText, setBulkCsvText] = useState("");
+  const [bulkParseResult, setBulkParseResult] = useState<CsvParseResult | null>(null);
 
   const { data: drama, isLoading } = useGetDrama(id, {
     query: { enabled: !!id, queryKey: getGetDramaQueryKey(id) }
@@ -115,6 +202,33 @@ export default function DramaEdit() {
         toast({ title: "Episode deleted", description: "Successfully removed episode." });
       },
       onError: () => toast({ title: "Error", description: "Failed to delete episode.", variant: "destructive" })
+    }
+  });
+
+  const batchCreateEpisodes = useBatchCreateEpisodes({
+    mutation: {
+      onSuccess: (data) => {
+        queryClient.invalidateQueries({ queryKey: getGetDramaQueryKey(id) });
+        setIsBulkImportOpen(false);
+        setBulkCsvText("");
+        setBulkParseResult(null);
+        toast({
+          title: "Import complete",
+          description: `${data.createdCount} added, ${data.updatedCount} updated.`
+        });
+      },
+      onError: () => toast({ title: "Error", description: "Failed to import episodes.", variant: "destructive" })
+    }
+  });
+
+  const batchDeleteEpisodes = useBatchDeleteEpisodes({
+    mutation: {
+      onSuccess: (data) => {
+        queryClient.invalidateQueries({ queryKey: getGetDramaQueryKey(id) });
+        setSelectedEpisodeIds(new Set());
+        toast({ title: "Episodes deleted", description: `Removed ${data.deletedCount} episode(s).` });
+      },
+      onError: () => toast({ title: "Error", description: "Failed to delete episodes.", variant: "destructive" })
     }
   });
 
@@ -224,6 +338,58 @@ export default function DramaEdit() {
       duration: ep.duration
     });
     setIsEpisodeModalOpen(true);
+  }
+
+  function openBulkImport() {
+    setBulkCsvText("");
+    setBulkParseResult(null);
+    setIsBulkImportOpen(true);
+  }
+
+  function handleBulkCsvChange(text: string) {
+    setBulkCsvText(text);
+    setBulkParseResult(text.trim() ? parseEpisodeCsv(text) : null);
+  }
+
+  async function handleBulkFileSelected(file: File) {
+    const text = await file.text();
+    handleBulkCsvChange(text);
+  }
+
+  function submitBulkImport() {
+    if (!bulkParseResult || bulkParseResult.rows.length === 0) return;
+    batchCreateEpisodes.mutate({
+      dramaId: id,
+      data: {
+        episodes: bulkParseResult.rows.map((r) => ({
+          episodeNumber: r.episodeNumber,
+          videoUrl: r.videoUrl
+        }))
+      }
+    });
+  }
+
+  function toggleEpisodeSelected(episodeId: string, checked: boolean) {
+    setSelectedEpisodeIds((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(episodeId);
+      else next.delete(episodeId);
+      return next;
+    });
+  }
+
+  function toggleSelectAll(checked: boolean) {
+    if (checked) {
+      setSelectedEpisodeIds(new Set(sortedEpisodes.map((ep) => ep.id)));
+    } else {
+      setSelectedEpisodeIds(new Set());
+    }
+  }
+
+  function handleBatchDelete() {
+    if (selectedEpisodeIds.size === 0) return;
+    if (!confirm(`Delete ${selectedEpisodeIds.size} selected episode(s)? This cannot be undone.`)) return;
+    batchDeleteEpisodes.mutate({ data: { episodeIds: Array.from(selectedEpisodeIds) } });
   }
 
   if (isLoading || !drama) {
@@ -451,10 +617,32 @@ export default function DramaEdit() {
               <h3 className="font-semibold font-display">Episode List</h3>
               <p className="text-sm text-muted-foreground mt-0.5">Manage and reorder episodes for this drama.</p>
             </div>
-            <Button onClick={openNewEpisode}>
-              <Plus className="mr-2 h-4 w-4" /> Add Episode
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={openBulkImport}>
+                <FileUp className="mr-2 h-4 w-4" /> Bulk Import
+              </Button>
+              <Button onClick={openNewEpisode}>
+                <Plus className="mr-2 h-4 w-4" /> Add Episode
+              </Button>
+            </div>
           </div>
+
+          {selectedEpisodeIds.size > 0 && (
+            <div className="flex items-center justify-between bg-primary/5 border border-primary/20 rounded-xl p-3 px-4">
+              <span className="text-sm font-medium">{selectedEpisodeIds.size} episode(s) selected</span>
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={() => setSelectedEpisodeIds(new Set())}>Clear</Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleBatchDelete}
+                  disabled={batchDeleteEpisodes.isPending}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" /> Delete Selected
+                </Button>
+              </div>
+            </div>
+          )}
 
           <div className="bg-card rounded-xl border border-border/50 shadow-sm overflow-hidden">
             {sortedEpisodes.length === 0 ? (
@@ -468,10 +656,24 @@ export default function DramaEdit() {
               </div>
             ) : (
               <div className="divide-y divide-border/50">
+                <div className="flex items-center p-3 sm:p-4 bg-muted/30">
+                  <div className="mr-3 flex items-center justify-center w-[18px]">
+                    <Checkbox
+                      checked={selectedEpisodeIds.size === sortedEpisodes.length}
+                      onCheckedChange={(checked) => toggleSelectAll(checked === true)}
+                      aria-label="Select all episodes"
+                    />
+                  </div>
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Select all</span>
+                </div>
                 {sortedEpisodes.map((ep) => (
                   <div key={ep.id} className="flex items-center p-3 sm:p-4 hover:bg-muted/30 transition-colors group">
-                    <div className="text-muted-foreground/40 mr-3 cursor-grab hover:text-foreground">
-                      <GripVertical size={18} />
+                    <div className="mr-3 flex items-center justify-center w-[18px] shrink-0">
+                      <Checkbox
+                        checked={selectedEpisodeIds.has(ep.id)}
+                        onCheckedChange={(checked) => toggleEpisodeSelected(ep.id, checked === true)}
+                        aria-label={`Select episode ${ep.episodeNumber}`}
+                      />
                     </div>
                     <div className="w-12 h-12 bg-primary/10 text-primary font-display font-bold text-lg rounded-md flex items-center justify-center shrink-0 mr-4">
                       {ep.episodeNumber}
@@ -565,6 +767,100 @@ export default function DramaEdit() {
               </DialogFooter>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isBulkImportOpen} onOpenChange={setIsBulkImportOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Bulk Import Episodes</DialogTitle>
+            <DialogDescription>
+              Upload or paste a CSV with columns "集数" (episode number) and "视频流文件路径" (video URL). Rows matching an existing episode number will be updated; new numbers will be added.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 pt-2">
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">CSV file</label>
+              <Input
+                type="file"
+                accept=".csv,text/csv"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleBulkFileSelected(file);
+                }}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Or paste CSV content</label>
+              <Textarea
+                rows={6}
+                placeholder={"集数,视频流文件路径\n第 1 集,\"https://example.com/1.m3u8\"\n第 2 集,\"https://example.com/2.m3u8\""}
+                value={bulkCsvText}
+                onChange={(e) => handleBulkCsvChange(e.target.value)}
+                className="font-mono text-xs"
+              />
+            </div>
+
+            {bulkParseResult && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-3 text-sm">
+                  <Badge variant="default" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+                    {bulkParseResult.rows.length} episode(s) parsed
+                  </Badge>
+                  {bulkParseResult.errors.length > 0 && (
+                    <Badge variant="destructive" className="bg-destructive/10 text-destructive border-destructive/20">
+                      {bulkParseResult.errors.length} row(s) skipped
+                    </Badge>
+                  )}
+                </div>
+
+                {bulkParseResult.rows.length > 0 && (
+                  <div className="border border-border/50 rounded-lg max-h-48 overflow-y-auto">
+                    <table className="w-full text-xs">
+                      <thead className="bg-muted/50 sticky top-0">
+                        <tr>
+                          <th className="text-left p-2 font-medium">Ep #</th>
+                          <th className="text-left p-2 font-medium">Video URL</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border/30">
+                        {bulkParseResult.rows.map((r, i) => (
+                          <tr key={i}>
+                            <td className="p-2 font-mono">{r.episodeNumber}</td>
+                            <td className="p-2 font-mono truncate max-w-[400px]">{r.videoUrl}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {bulkParseResult.errors.length > 0 && (
+                  <div className="border border-destructive/20 bg-destructive/5 rounded-lg p-3 max-h-32 overflow-y-auto space-y-1">
+                    {bulkParseResult.errors.map((err, i) => (
+                      <div key={i} className="flex items-start gap-2 text-xs text-destructive">
+                        <AlertCircle size={12} className="mt-0.5 shrink-0" />
+                        <span>{err}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="pt-4">
+            <Button type="button" variant="outline" onClick={() => setIsBulkImportOpen(false)}>Cancel</Button>
+            <Button
+              type="button"
+              onClick={submitBulkImport}
+              disabled={!bulkParseResult || bulkParseResult.rows.length === 0 || batchCreateEpisodes.isPending}
+            >
+              {batchCreateEpisodes.isPending ? "Importing..." : `Import ${bulkParseResult?.rows.length ?? 0} Episode(s)`}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
