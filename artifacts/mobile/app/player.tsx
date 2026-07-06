@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, Pressable, FlatList,
-  Dimensions, ActivityIndicator, SafeAreaView, PanResponder
+  Dimensions, ActivityIndicator, SafeAreaView
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useVideoPlayer, VideoView, VideoPlayer } from 'expo-video';
 import { FontAwesome5 } from '@expo/vector-icons';
+import Slider from '@react-native-community/slider';
 import { useGetDramaPlayback, getGetDramaPlaybackQueryKey } from '@workspace/api-client-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
@@ -25,6 +26,9 @@ const SingleVideo = ({
   url: string, isActive: boolean, isUnlocked: boolean, onNeedAd: () => void,
   onActivePlayerReady: (player: VideoPlayer | null) => void
 }) => {
+  const [manuallyPaused, setManuallyPaused] = useState(false);
+  const [showPauseIcon, setShowPauseIcon] = useState(false);
+
   const player = useVideoPlayer(url, player => {
     player.loop = true;
     player.timeUpdateEventInterval = 0.5;
@@ -45,13 +49,18 @@ const SingleVideo = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive, player]);
 
+  // Reset manual pause state whenever this slide becomes/stops being active.
   useEffect(() => {
-    if (isActive && isUnlocked) {
+    setManuallyPaused(false);
+  }, [isActive]);
+
+  useEffect(() => {
+    if (isActive && isUnlocked && !manuallyPaused) {
       player.play();
     } else {
       player.pause();
     }
-  }, [isActive, isUnlocked, player]);
+  }, [isActive, isUnlocked, manuallyPaused, player]);
 
   // Handle ad wall timer if locked
   useEffect(() => {
@@ -64,79 +73,67 @@ const SingleVideo = ({
     }
   }, [isActive, isUnlocked]);
 
+  const handleToggleTap = () => {
+    if (!isActive || !isUnlocked) return;
+    setManuallyPaused(prev => !prev);
+    setShowPauseIcon(true);
+    setTimeout(() => setShowPauseIcon(false), 500);
+  };
+
   return (
-    <View style={styles.videoContainer}>
+    <Pressable style={styles.videoContainer} onPress={handleToggleTap}>
       <VideoView
         player={player}
         style={styles.video}
         nativeControls={false}
         contentFit="cover"
       />
+      {isUnlocked && showPauseIcon && (
+        <View style={styles.centerIconOverlay} pointerEvents="none">
+          <View style={styles.centerIconCircle}>
+            <FontAwesome5 name={manuallyPaused ? 'play' : 'pause'} solid size={28} color={colors.dark.foreground} />
+          </View>
+        </View>
+      )}
       {!isUnlocked && (
         <View style={styles.lockedOverlay}>
           <ActivityIndicator color={colors.dark.primary} size="large" />
           <Text style={styles.lockedText}>Preview playing...</Text>
         </View>
       )}
-    </View>
+    </Pressable>
   );
 };
 
 function ProgressBar({
   progress, onSeek, disabled
 }: { progress: number, onSeek: (fraction: number) => void, disabled: boolean }) {
-  const [barWidth, setBarWidth] = useState(0);
-  const [dragFraction, setDragFraction] = useState<number | null>(null);
-  const barWidthRef = useRef(0);
+  const [sliding, setSliding] = useState(false);
+  const [localValue, setLocalValue] = useState(progress);
 
-  const clamp = (v: number) => Math.max(0, Math.min(1, v));
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => !disabled,
-      onMoveShouldSetPanResponder: () => !disabled,
-      onPanResponderGrant: (evt) => {
-        if (disabled || barWidthRef.current === 0) return;
-        const fraction = clamp(evt.nativeEvent.locationX / barWidthRef.current);
-        setDragFraction(fraction);
-      },
-      onPanResponderMove: (evt) => {
-        if (disabled || barWidthRef.current === 0) return;
-        const fraction = clamp(evt.nativeEvent.locationX / barWidthRef.current);
-        setDragFraction(fraction);
-      },
-      onPanResponderRelease: (evt) => {
-        if (disabled || barWidthRef.current === 0) return;
-        const fraction = clamp(evt.nativeEvent.locationX / barWidthRef.current);
-        onSeek(fraction);
-        setDragFraction(null);
-      },
-      onPanResponderTerminate: () => {
-        setDragFraction(null);
-      },
-    })
-  ).current;
-
-  const displayFraction = dragFraction !== null ? dragFraction : progress;
+  useEffect(() => {
+    if (!sliding) {
+      setLocalValue(progress);
+    }
+  }, [progress, sliding]);
 
   return (
-    <View
-      style={styles.progressHitArea}
-      onLayout={(e) => {
-        barWidthRef.current = e.nativeEvent.layout.width;
-        setBarWidth(e.nativeEvent.layout.width);
-      }}
-      {...panResponder.panHandlers}
-    >
-      <View style={styles.progressBarBg}>
-        <View style={[styles.progressBarFill, { width: `${clamp(displayFraction) * 100}%` }]} />
-      </View>
-      <View
-        style={[
-          styles.progressHandle,
-          { left: barWidth > 0 ? clamp(displayFraction) * barWidth - 6 : -6 },
-          dragFraction !== null && styles.progressHandleActive,
-        ]}
+    <View style={styles.sliderWrap}>
+      <Slider
+        style={styles.slider}
+        minimumValue={0}
+        maximumValue={1}
+        value={localValue}
+        disabled={disabled}
+        minimumTrackTintColor={colors.dark.primary}
+        maximumTrackTintColor="rgba(255,255,255,0.3)"
+        thumbTintColor={colors.dark.primary}
+        onSlidingStart={() => setSliding(true)}
+        onValueChange={(v: number) => setLocalValue(v)}
+        onSlidingComplete={(v: number) => {
+          onSeek(v);
+          setSliding(false);
+        }}
       />
     </View>
   );
@@ -185,10 +182,11 @@ export default function PlayerScreen() {
 
   const handleSeek = (fraction: number) => {
     const player = activePlayerRef.current;
-    if (player && playbackTime.duration > 0) {
-      const newTime = fraction * playbackTime.duration;
+    const duration = player?.duration ?? playbackTime.duration;
+    if (player && duration > 0) {
+      const newTime = fraction * duration;
       player.currentTime = newTime;
-      setPlaybackTime((prev) => ({ ...prev, currentTime: newTime }));
+      setPlaybackTime({ currentTime: newTime, duration });
     }
   };
 
@@ -384,6 +382,19 @@ const styles = StyleSheet.create({
   video: {
     flex: 1,
   },
+  centerIconOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  centerIconCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   lockedOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.4)',
@@ -470,7 +481,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingBottom: 12,
     paddingTop: 48,
     zIndex: 5,
   },
@@ -501,36 +512,13 @@ const styles = StyleSheet.create({
   epText: {
     color: colors.dark.secondaryForeground,
     fontSize: 14,
-    marginBottom: 16,
+    marginBottom: 8,
   },
-  progressHitArea: {
+  sliderWrap: {
+    marginHorizontal: -8,
+  },
+  slider: {
+    width: '100%',
     height: 24,
-    justifyContent: 'center',
-  },
-  progressBarBg: {
-    height: 4,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    height: '100%',
-    backgroundColor: colors.dark.primary,
-  },
-  progressHandle: {
-    position: 'absolute',
-    top: 6,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: colors.dark.primary,
-    borderWidth: 2,
-    borderColor: '#fff',
-  },
-  progressHandleActive: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    top: 4,
   },
 });
