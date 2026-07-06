@@ -3,12 +3,20 @@ import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { setBaseUrl } from "@workspace/api-client-react";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthProvider } from "@/context/AuthContext";
 import { DramaProvider } from "@/context/DramaContext";
 
 SplashScreen.preventAutoHideAsync();
+
+if (process.env.EXPO_PUBLIC_DOMAIN) {
+  setBaseUrl(`https://${process.env.EXPO_PUBLIC_DOMAIN}`);
+}
+
+const queryClient = new QueryClient();
 
 function RootLayoutNav() {
   return (
@@ -29,16 +37,18 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <SafeAreaProvider>
-      <ErrorBoundary>
-        <AuthProvider>
-          <DramaProvider>
-            <GestureHandlerRootView style={{ flex: 1, backgroundColor: "#0A0D14" }}>
-              <RootLayoutNav />
-            </GestureHandlerRootView>
-          </DramaProvider>
-        </AuthProvider>
-      </ErrorBoundary>
-    </SafeAreaProvider>
+    <QueryClientProvider client={queryClient}>
+      <SafeAreaProvider>
+        <ErrorBoundary>
+          <AuthProvider>
+            <DramaProvider>
+              <GestureHandlerRootView style={{ flex: 1, backgroundColor: "#0A0D14" }}>
+                <RootLayoutNav />
+              </GestureHandlerRootView>
+            </DramaProvider>
+          </AuthProvider>
+        </ErrorBoundary>
+      </SafeAreaProvider>
+    </QueryClientProvider>
   );
 }

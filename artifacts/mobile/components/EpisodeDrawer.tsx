@@ -1,24 +1,22 @@
 import React from "react";
 import { View, Text, StyleSheet, Pressable, Modal, FlatList } from "react-native";
 import { FontAwesome5 } from "@expo/vector-icons";
-import { MOCK_DRAMAS } from "@/data/mock";
-import { useDrama } from "@/context/DramaContext";
 import colors from "@/constants/colors";
+
+interface DrawerEpisode {
+  episodeNumber: number;
+  isUnlocked: boolean;
+}
 
 interface EpisodeDrawerProps {
   visible: boolean;
   onClose: () => void;
-  dramaId: string;
+  episodes: DrawerEpisode[];
   currentEpisode: number;
   onSelectEpisode: (ep: number, isUnlocked: boolean) => void;
 }
 
-export default function EpisodeDrawer({ visible, onClose, dramaId, currentEpisode, onSelectEpisode }: EpisodeDrawerProps) {
-  const drama = MOCK_DRAMAS.find(d => d.dramaId === dramaId);
-  const { getIsUnlocked } = useDrama();
-
-  if (!drama) return null;
-
+export default function EpisodeDrawer({ visible, onClose, episodes, currentEpisode, onSelectEpisode }: EpisodeDrawerProps) {
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.overlay}>
@@ -32,16 +30,16 @@ export default function EpisodeDrawer({ visible, onClose, dramaId, currentEpisod
           </View>
 
           <FlatList
-            data={drama.episodes}
+            data={episodes}
             numColumns={5}
-            keyExtractor={item => item.episodeNumber.toString()}
+            keyExtractor={(item) => item.episodeNumber.toString()}
             contentContainerStyle={styles.grid}
             renderItem={({ item }) => {
-              const isUnlocked = getIsUnlocked(dramaId, item.episodeNumber);
+              const isUnlocked = item.isUnlocked;
               const isActive = item.episodeNumber === currentEpisode;
 
               return (
-                <Pressable 
+                <Pressable
                   style={[
                     styles.tile,
                     isActive && styles.tileActive,
@@ -57,11 +55,11 @@ export default function EpisodeDrawer({ visible, onClose, dramaId, currentEpisod
                     {item.episodeNumber}
                   </Text>
                   {!isUnlocked && (
-                    <FontAwesome5 
-                      name="lock" 
-                      size={10} 
-                      color={colors.dark.mutedForeground} 
-                      style={styles.lockIcon} 
+                    <FontAwesome5
+                      name="lock"
+                      size={10}
+                      color={colors.dark.mutedForeground}
+                      style={styles.lockIcon}
                     />
                   )}
                 </Pressable>

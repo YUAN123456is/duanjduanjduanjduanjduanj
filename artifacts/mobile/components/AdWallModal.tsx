@@ -1,40 +1,48 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, Pressable, Modal, ActivityIndicator } from "react-native";
-import { useDrama } from "@/context/DramaContext";
+import { useUnlockEpisodes } from "@workspace/api-client-react";
 import colors from "@/constants/colors";
 import * as Haptics from "expo-haptics";
 
 interface AdWallModalProps {
   visible: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (unlockedEpisodes: number[]) => void;
+  userId: string;
   dramaId: string;
   episode: number;
   episodesPerAdUnlock: number;
 }
 
-export default function AdWallModal({ visible, onClose, onSuccess, dramaId, episode, episodesPerAdUnlock }: AdWallModalProps) {
-  const { incrementAdCounter } = useDrama();
+export default function AdWallModal({ visible, onClose, onSuccess, userId, dramaId, episode, episodesPerAdUnlock }: AdWallModalProps) {
+  const unlockEpisodes = useUnlockEpisodes();
   const [state, setState] = useState<"default" | "loading" | "error" | "limit_reached">("default");
 
-  const handleWatchAd = async () => {
+  const handleWatchAd = () => {
     setState("loading");
-    const allowed = await incrementAdCounter();
-    
-    if (!allowed) {
-      setState("limit_reached");
-      return;
-    }
 
-    // Simulate ad loading and completion
-    setTimeout(() => {
-      // 90% success rate
-      if (Math.random() > 0.1) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        onSuccess();
-        setState("default"); // reset for next time
-      } else {
+    // Simulate rewarded-ad playback (loading -> success/timeout-fail), then
+    // ask the backend to actually unlock the episodes and enforce the daily cap.
+    setTimeout(async () => {
+      if (Math.random() <= 0.1) {
         setState("error");
+        return;
+      }
+
+      try {
+        const result = await unlockEpisodes.mutateAsync({
+          data: { userId, dramaId, currentEpisodeNumber: episode },
+        });
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        onSuccess(result.unlockedEpisodes);
+        setState("default");
+      } catch (err: unknown) {
+        const status = (err as { status?: number } | null)?.status;
+        if (status === 400) {
+          setState("limit_reached");
+        } else {
+          setState("error");
+        }
       }
     }, 2500);
   };
@@ -62,15 +70,15 @@ export default function AdWallModal({ visible, onClose, onSuccess, dramaId, epis
               </Pressable>
             </View>
           ) : (
-            <Pressable 
-              style={[styles.primaryButton, state === "loading" && styles.loadingButton]} 
+            <Pressable
+              style={[styles.primaryButton, state === "loading" && styles.loadingButton]}
               onPress={handleWatchAd}
               disabled={state === "loading"}
             >
               {state === "loading" ? (
                 <ActivityIndicator color={colors.dark.primaryForeground} />
               ) : (
-                <Text style={styles.primaryButtonText}>🎬 Watch Ad to Unlock</Text>
+                <Text style={styles.primaryButtonText}>Watch Ad to Unlock</Text>
               )}
             </Pressable>
           )}

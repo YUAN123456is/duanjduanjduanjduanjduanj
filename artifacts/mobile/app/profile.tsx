@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Pressable, ScrollView, Alert, Modal } from "rea
 import { useRouter } from "expo-router";
 import { useAuth } from "@/context/AuthContext";
 import { useDrama } from "@/context/DramaContext";
-import { MOCK_DRAMAS } from "@/data/mock";
+import { useListDramas } from "@workspace/api-client-react";
 import colors from "@/constants/colors";
 import { FontAwesome5 } from "@expo/vector-icons";
 import * as WebBrowser from "expo-web-browser";
@@ -12,11 +12,12 @@ export default function Profile() {
   const router = useRouter();
   const { provider, signOut } = useAuth();
   const { watchHistory } = useDrama();
+  const { data: dramas } = useListDramas({ publishedOnly: true });
   const [langModalVisible, setLangModalVisible] = useState(false);
   const [language, setLanguage] = useState("English");
 
   const historyDramas = Object.keys(watchHistory).map(id => {
-    return { drama: MOCK_DRAMAS.find(d => d.dramaId === id), history: watchHistory[id] };
+    return { drama: dramas?.find(d => d.id === id), history: watchHistory[id] };
   }).filter(h => h.drama);
 
   const handleSignOut = async () => {
@@ -77,12 +78,12 @@ export default function Profile() {
             <Text style={styles.sectionTitle}>Watch History</Text>
             <View style={styles.card}>
               {historyDramas.map(({ drama, history }, index) => (
-                <View key={drama!.dramaId}>
+                <View key={drama!.id}>
                   <Pressable 
                     style={styles.historyRow}
-                    onPress={() => router.push({ pathname: "/player", params: { dramaId: drama!.dramaId, initialEpisode: history.lastEpisode } })}
+                    onPress={() => router.push({ pathname: "/player", params: { dramaId: drama!.id, initialEpisode: history.lastEpisode } })}
                   >
-                    <Text style={styles.historyTitle} numberOfLines={1}>{drama!.title}</Text>
+                    <Text style={styles.historyTitle} numberOfLines={1}>{drama!.titleEn}</Text>
                     <Text style={styles.historyEp}>EP {history.lastEpisode}</Text>
                   </Pressable>
                   {index < historyDramas.length - 1 && <View style={styles.divider} />}

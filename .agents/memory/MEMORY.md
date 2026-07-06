@@ -1,2 +1,4 @@
 - [Expo video dependency](expo-video-setup.md) — expo-video is not in the mobile scaffold's package.json by default; must be installed explicitly before use.
 - [Artifact workflow naming](artifact-workflow-names.md) — restart_workflow needs the full registered name, not the artifact slug.
+- [Expo API client base URL](expo-api-client-base-url.md) — Expo bypasses the shared proxy, so generated API hooks need setBaseUrl(EXPO_PUBLIC_DOMAIN) at module top level.
+- [Express route ordering & React hooks-order](express-route-ordering-and-hooks-order.md) — static routes must precede :param routes; all hooks must precede early loading/error returns.

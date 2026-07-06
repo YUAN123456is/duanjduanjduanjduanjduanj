@@ -10,6 +10,16 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: config
+    description: Global ad & compliance configuration
+  - name: dramas
+    description: Drama catalog management and playback
+  - name: episodes
+    description: Episode management and unlocking
+  - name: users
+    description: Lightweight device-based user accounts
+  - name: admin
+    description: Admin dashboard analytics
 paths:
   /healthz:
     get:
@@ -24,6 +34,284 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /config/global:
+    get:
+      operationId: getGlobalConfig
+      tags: [config]
+      summary: Get the global ad & compliance configuration
+      responses:
+        "200":
+          description: Global configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GlobalConfig"
+    patch:
+      operationId: updateGlobalConfig
+      tags: [config]
+      summary: Update the global ad & compliance configuration (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GlobalConfigUpdate"
+      responses:
+        "200":
+          description: Updated global configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GlobalConfig"
+
+  /dramas:
+    get:
+      operationId: listDramas
+      tags: [dramas]
+      summary: List all dramas
+      parameters:
+        - name: publishedOnly
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: List of dramas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Drama"
+    post:
+      operationId: createDrama
+      tags: [dramas]
+      summary: Create a drama (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DramaInput"
+      responses:
+        "201":
+          description: Created drama
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Drama"
+
+  /dramas/{dramaId}:
+    get:
+      operationId: getDrama
+      tags: [dramas]
+      summary: Get a single drama with its episodes (admin edit view)
+      parameters:
+        - name: dramaId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Drama with episodes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DramaWithEpisodes"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateDrama
+      tags: [dramas]
+      summary: Update a drama (admin)
+      parameters:
+        - name: dramaId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DramaUpdate"
+      responses:
+        "200":
+          description: Updated drama
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Drama"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteDrama
+      tags: [dramas]
+      summary: Delete a drama (admin)
+      parameters:
+        - name: dramaId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  /dramas/playback:
+    get:
+      operationId: getDramaPlayback
+      tags: [dramas]
+      summary: Get drama playback details with per-user unlock state
+      parameters:
+        - name: dramaId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: userId
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Drama playback details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DramaPlayback"
+        "404":
+          description: Not found
+
+  /dramas/{dramaId}/episodes:
+    post:
+      operationId: createEpisode
+      tags: [episodes]
+      summary: Add an episode to a drama (admin)
+      parameters:
+        - name: dramaId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EpisodeInput"
+      responses:
+        "201":
+          description: Created episode
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Episode"
+
+  /episodes/{episodeId}:
+    patch:
+      operationId: updateEpisode
+      tags: [episodes]
+      summary: Update an episode (admin)
+      parameters:
+        - name: episodeId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EpisodeUpdate"
+      responses:
+        "200":
+          description: Updated episode
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Episode"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteEpisode
+      tags: [episodes]
+      summary: Delete an episode (admin)
+      parameters:
+        - name: episodeId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  /episodes/unlock:
+    post:
+      operationId: unlockEpisodes
+      tags: [episodes]
+      summary: Unlock a batch of episodes after a rewarded ad completes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UnlockRequest"
+      responses:
+        "200":
+          description: Unlock result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnlockResult"
+        "400":
+          description: Invalid request or daily limit reached
+        "404":
+          description: Drama not found
+
+  /users/register:
+    post:
+      operationId: registerUser
+      tags: [users]
+      summary: Register or fetch a device-based user (Apple/Google/Guest)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRegisterInput"
+      responses:
+        "200":
+          description: The user record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /admin/dashboard-summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [admin]
+      summary: Aggregate stats for the admin dashboard
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +322,348 @@ components:
       required:
         - status
 
+    GlobalConfig:
+      type: object
+      required:
+        - globalAdEnabled
+        - activeAdNetwork
+        - maxDailyAdUnlocks
+        - reviewModeActive
+      properties:
+        globalAdEnabled:
+          type: boolean
+        activeAdNetwork:
+          type: string
+          enum: [admob, applovin, ironsource]
+        maxDailyAdUnlocks:
+          type: integer
+        iosRewardUnitId:
+          type: ["string", "null"]
+        androidRewardUnitId:
+          type: ["string", "null"]
+        reviewModeActive:
+          type: boolean
+
+    GlobalConfigUpdate:
+      type: object
+      properties:
+        globalAdEnabled:
+          type: boolean
+        activeAdNetwork:
+          type: string
+          enum: [admob, applovin, ironsource]
+        maxDailyAdUnlocks:
+          type: integer
+        iosRewardUnitId:
+          type: string
+        androidRewardUnitId:
+          type: string
+        reviewModeActive:
+          type: boolean
+
+    Drama:
+      type: object
+      required:
+        - id
+        - titleEn
+        - coverUrl
+        - tags
+        - totalEpisodes
+        - viewsCount
+        - freeEpisodesCount
+        - episodesPerAdUnlock
+        - interstitialAdFreq
+        - isPublished
+        - createdAt
+      properties:
+        id:
+          type: string
+        titleEn:
+          type: string
+        titleEs:
+          type: ["string", "null"]
+        titleZhTw:
+          type: ["string", "null"]
+        coverUrl:
+          type: string
+        description:
+          type: ["string", "null"]
+        tags:
+          type: array
+          items:
+            type: string
+        totalEpisodes:
+          type: integer
+        viewsCount:
+          type: integer
+        freeEpisodesCount:
+          type: integer
+        episodesPerAdUnlock:
+          type: integer
+        interstitialAdFreq:
+          type: integer
+        isPublished:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    DramaInput:
+      type: object
+      required:
+        - titleEn
+        - coverUrl
+      properties:
+        titleEn:
+          type: string
+          minLength: 1
+        titleEs:
+          type: string
+        titleZhTw:
+          type: string
+        coverUrl:
+          type: string
+        description:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        freeEpisodesCount:
+          type: integer
+        episodesPerAdUnlock:
+          type: integer
+        interstitialAdFreq:
+          type: integer
+        isPublished:
+          type: boolean
+
+    DramaUpdate:
+      type: object
+      properties:
+        titleEn:
+          type: string
+          minLength: 1
+        titleEs:
+          type: string
+        titleZhTw:
+          type: string
+        coverUrl:
+          type: string
+        description:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        freeEpisodesCount:
+          type: integer
+        episodesPerAdUnlock:
+          type: integer
+        interstitialAdFreq:
+          type: integer
+        isPublished:
+          type: boolean
+
+    Episode:
+      type: object
+      required:
+        - id
+        - dramaId
+        - episodeNumber
+        - videoUrl
+        - duration
+        - createdAt
+      properties:
+        id:
+          type: string
+        dramaId:
+          type: string
+        episodeNumber:
+          type: integer
+        title:
+          type: ["string", "null"]
+        videoUrl:
+          type: string
+        duration:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    DramaWithEpisodes:
+      allOf:
+        - $ref: "#/components/schemas/Drama"
+        - type: object
+          required:
+            - episodes
+          properties:
+            episodes:
+              type: array
+              items:
+                $ref: "#/components/schemas/Episode"
+
+    EpisodeInput:
+      type: object
+      required:
+        - episodeNumber
+        - videoUrl
+      properties:
+        episodeNumber:
+          type: integer
+        title:
+          type: string
+        videoUrl:
+          type: string
+        duration:
+          type: integer
+
+    EpisodeUpdate:
+      type: object
+      properties:
+        episodeNumber:
+          type: integer
+        title:
+          type: string
+        videoUrl:
+          type: string
+        duration:
+          type: integer
+
+    MonetizationRules:
+      type: object
+      required:
+        - freeEpisodesCount
+        - episodesPerAdUnlock
+        - interstitialAdFreq
+      properties:
+        freeEpisodesCount:
+          type: integer
+        episodesPerAdUnlock:
+          type: integer
+        interstitialAdFreq:
+          type: integer
+
+    PlaybackEpisode:
+      type: object
+      required:
+        - episodeNumber
+        - videoUrl
+        - isUnlocked
+      properties:
+        episodeNumber:
+          type: integer
+        title:
+          type: ["string", "null"]
+        videoUrl:
+          type: string
+        isUnlocked:
+          type: boolean
+
+    DramaPlayback:
+      type: object
+      required:
+        - dramaId
+        - title
+        - coverUrl
+        - tags
+        - monetizationRules
+        - episodes
+      properties:
+        dramaId:
+          type: string
+        title:
+          type: string
+        coverUrl:
+          type: string
+        description:
+          type: ["string", "null"]
+        tags:
+          type: array
+          items:
+            type: string
+        monetizationRules:
+          $ref: "#/components/schemas/MonetizationRules"
+        episodes:
+          type: array
+          items:
+            $ref: "#/components/schemas/PlaybackEpisode"
+
+    UnlockRequest:
+      type: object
+      required:
+        - userId
+        - dramaId
+        - currentEpisodeNumber
+      properties:
+        userId:
+          type: string
+        dramaId:
+          type: string
+        currentEpisodeNumber:
+          type: integer
+
+    UnlockResult:
+      type: object
+      required:
+        - unlockedEpisodes
+        - dailyUnlocksUsed
+        - dailyUnlocksRemaining
+      properties:
+        unlockedEpisodes:
+          type: array
+          items:
+            type: integer
+        dailyUnlocksUsed:
+          type: integer
+        dailyUnlocksRemaining:
+          type: integer
+
+    User:
+      type: object
+      required:
+        - id
+        - deviceId
+        - authProvider
+        - createdAt
+      properties:
+        id:
+          type: string
+        deviceId:
+          type: string
+        authProvider:
+          type: string
+          enum: [apple, google, guest]
+        createdAt:
+          type: string
+          format: date-time
+
+    UserRegisterInput:
+      type: object
+      required:
+        - deviceId
+        - authProvider
+      properties:
+        deviceId:
+          type: string
+          minLength: 1
+        authProvider:
+          type: string
+          enum: [apple, google, guest]
+
+    DashboardSummary:
+      type: object
+      required:
+        - totalDramas
+        - totalEpisodes
+        - totalViews
+        - adUnlocksToday
+      properties:
+        totalDramas:
+          type: integer
+        totalEpisodes:
+          type: integer
+        totalViews:
+          type: integer
+        adUnlocksToday:
+          type: integer

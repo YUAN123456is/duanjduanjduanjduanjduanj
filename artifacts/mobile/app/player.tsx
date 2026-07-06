@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  View, Text, StyleSheet, Pressable, FlatList, 
-  Dimensions, ActivityIndicator, SafeAreaView 
+import {
+  View, Text, StyleSheet, Pressable, FlatList,
+  Dimensions, ActivityIndicator, SafeAreaView
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { FontAwesome5 } from '@expo/vector-icons';
+import { useGetDramaPlayback, getGetDramaPlaybackQueryKey } from '@workspace/api-client-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/context/AuthContext';
 import { useDrama } from '@/context/DramaContext';
-import { MOCK_DRAMAS } from '@/data/mock';
 import colors from '@/constants/colors';
 import * as Haptics from 'expo-haptics';
 
@@ -17,10 +19,10 @@ import ReportSheet from '@/components/ReportSheet';
 
 const { height: WINDOW_HEIGHT, width: WINDOW_WIDTH } = Dimensions.get('window');
 
-const SingleVideo = ({ 
-  url, isActive, isUnlocked, onNeedAd 
-}: { 
-  url: string, isActive: boolean, isUnlocked: boolean, onNeedAd: () => void 
+const SingleVideo = ({
+  url, isActive, isUnlocked, onNeedAd
+}: {
+  url: string, isActive: boolean, isUnlocked: boolean, onNeedAd: () => void
 }) => {
   const player = useVideoPlayer(url, player => {
     player.loop = true;
@@ -50,9 +52,9 @@ const SingleVideo = ({
 
   return (
     <View style={styles.videoContainer}>
-      <VideoView 
-        player={player} 
-        style={styles.video} 
+      <VideoView
+        player={player}
+        style={styles.video}
         nativeControls={false}
         contentFit="cover"
       />
@@ -72,8 +74,14 @@ export default function PlayerScreen() {
   const dramaId = params.dramaId as string;
   const initialEpisode = parseInt((params.initialEpisode as string) || "1", 10);
 
-  const drama = MOCK_DRAMAS.find(d => d.dramaId === dramaId);
-  const { getIsUnlocked, unlockEpisode, updateProgress } = useDrama();
+  const { userId } = useAuth();
+  const { updateProgress } = useDrama();
+  const queryClient = useQueryClient();
+
+  const { data: drama, isLoading, isError } = useGetDramaPlayback(
+    { dramaId, userId: userId ?? undefined },
+    { query: { enabled: !!dramaId, queryKey: getGetDramaPlaybackQueryKey({ dramaId, userId: userId ?? undefined }) } }
+  );
 
   const [currentIndex, setCurrentIndex] = useState(initialEpisode - 1);
   const [showAdWall, setShowAdWall] = useState(false);
@@ -81,10 +89,37 @@ export default function PlayerScreen() {
   const [showReport, setShowReport] = useState(false);
   const [likes, setLikes] = useState<Record<number, boolean>>({});
 
-  if (!drama) return <View style={styles.container}><Text style={styles.errorText}>Drama not found</Text></View>;
+  const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
+    if (viewableItems.length > 0) {
+      const newIndex = viewableItems[0].index;
+      setCurrentIndex(newIndex);
+    }
+  }).current;
+
+  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 50 }).current;
+  const flatListRef = useRef<FlatList>(null);
+
+  useEffect(() => {
+    if (drama && dramaId && drama.episodes[currentIndex]) {
+      updateProgress(dramaId, drama.episodes[currentIndex].episodeNumber, 0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dramaId, currentIndex, !!drama]);
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <ActivityIndicator color={colors.dark.primary} size="large" />
+      </View>
+    );
+  }
+
+  if (isError || !drama) {
+    return <View style={styles.container}><Text style={styles.errorText}>Drama not found</Text></View>;
+  }
 
   const currentEp = drama.episodes[currentIndex];
-  const isUnlocked = getIsUnlocked(drama.dramaId, currentEp.episodeNumber);
+  const isUnlocked = currentEp.isUnlocked;
 
   const handleLike = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -92,27 +127,14 @@ export default function PlayerScreen() {
   };
 
   const handleAdSuccess = () => {
-    const start = currentEp.episodeNumber;
-    const end = Math.min(start + drama.monetizationRules.episodesPerAdUnlock - 1, drama.episodes.length);
-    const epsToUnlock = Array.from({ length: end - start + 1 }, (_, i) => start + i);
-    unlockEpisode(drama.dramaId, epsToUnlock);
+    queryClient.invalidateQueries({ queryKey: getGetDramaPlaybackQueryKey({ dramaId, userId: userId ?? undefined }) });
     setShowAdWall(false);
   };
-
-  const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
-    if (viewableItems.length > 0) {
-      const newIndex = viewableItems[0].index;
-      setCurrentIndex(newIndex);
-      updateProgress(drama.dramaId, drama.episodes[newIndex].episodeNumber, 0);
-    }
-  }).current;
-
-  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 50 }).current;
-  const flatListRef = useRef<FlatList>(null);
 
   const navigateToEpisode = (epNumber: number, isUnl: boolean) => {
     setShowDrawer(false);
     const index = epNumber - 1;
+    setCurrentIndex(index);
     flatListRef.current?.scrollToIndex({ index, animated: false });
     if (!isUnl) {
       setShowAdWall(true);
@@ -135,10 +157,10 @@ export default function PlayerScreen() {
         maxToRenderPerBatch={3}
         renderItem={({ item, index }) => (
           <View style={{ height: WINDOW_HEIGHT, width: WINDOW_WIDTH }}>
-            <SingleVideo 
-              url={item.videoUrl} 
-              isActive={index === currentIndex} 
-              isUnlocked={getIsUnlocked(drama.dramaId, item.episodeNumber)}
+            <SingleVideo
+              url={item.videoUrl}
+              isActive={index === currentIndex}
+              isUnlocked={item.isUnlocked}
               onNeedAd={() => setShowAdWall(true)}
             />
           </View>
@@ -198,34 +220,35 @@ export default function PlayerScreen() {
         </View>
         <Text style={styles.titleText}>{drama.title}</Text>
         <Text style={styles.epText}>Episode {currentEp.episodeNumber} / {drama.episodes.length}</Text>
-        
+
         {/* Fake Progress Bar */}
         <View style={styles.progressBarBg}>
           <View style={[styles.progressBarFill, { width: '30%' }]} />
         </View>
       </SafeAreaView>
 
-      <AdWallModal 
-        visible={showAdWall} 
+      <AdWallModal
+        visible={showAdWall}
         onClose={() => {
           setShowAdWall(false);
           if (!isUnlocked) router.back();
         }}
         onSuccess={handleAdSuccess}
-        dramaId={drama.dramaId}
+        userId={userId ?? ""}
+        dramaId={dramaId}
         episode={currentEp.episodeNumber}
         episodesPerAdUnlock={drama.monetizationRules.episodesPerAdUnlock}
       />
 
-      <EpisodeDrawer 
+      <EpisodeDrawer
         visible={showDrawer}
         onClose={() => setShowDrawer(false)}
-        dramaId={drama.dramaId}
+        episodes={drama.episodes}
         currentEpisode={currentEp.episodeNumber}
         onSelectEpisode={navigateToEpisode}
       />
 
-      <ReportSheet 
+      <ReportSheet
         visible={showReport}
         onClose={() => setShowReport(false)}
       />
@@ -237,6 +260,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000',
+  },
+  centered: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   videoContainer: {
     flex: 1,
