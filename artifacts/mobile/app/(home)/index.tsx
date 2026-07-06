@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
-import { View, Text, StyleSheet, ScrollView, Pressable, Image, SafeAreaView, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Pressable, Image, ActivityIndicator } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import logoWordmark from "@/assets/images/logo-wordmark.png";
 import { useRouter } from "expo-router";
 import { useListDramas, useGetHomeFeed } from "@workspace/api-client-react";

@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, Pressable, FlatList,
-  Dimensions, ActivityIndicator, SafeAreaView
+  Dimensions, ActivityIndicator
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useVideoPlayer, VideoView, VideoPlayer } from 'expo-video';
 import { FontAwesome5 } from '@expo/vector-icons';

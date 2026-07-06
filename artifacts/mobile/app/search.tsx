@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, Pressable, TextInput, FlatList, Image, SafeAreaView, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, Pressable, TextInput, FlatList, Image, ActivityIndicator } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useListDramas, getListDramasQueryKey } from "@workspace/api-client-react";
 import { useLocale, getLocalizedTitle } from "@/context/LocaleContext";
