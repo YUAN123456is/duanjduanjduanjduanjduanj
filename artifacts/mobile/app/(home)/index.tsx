@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, Pressable, Image, SafeAreaView, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
-import { useListDramas } from "@workspace/api-client-react";
+import { useListDramas, useGetHomeFeed } from "@workspace/api-client-react";
 import { useDrama } from "@/context/DramaContext";
 import colors from "@/constants/colors";
 import { FontAwesome5 } from "@expo/vector-icons";
@@ -12,6 +12,7 @@ export default function Home() {
   const { watchHistory } = useDrama();
 
   const { data: dramas, isLoading, isError, refetch } = useListDramas({ publishedOnly: true });
+  const { data: homeFeed } = useGetHomeFeed();
 
   const categories = useMemo(() => {
     const tagSet = new Set<string>();
@@ -54,9 +55,14 @@ export default function Home() {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
         <Text style={styles.logo}>DramaVerse</Text>
-        <Pressable onPress={() => router.push("/profile")} hitSlop={12}>
-          <FontAwesome5 name="user-circle" solid size={24} color={colors.dark.foreground} />
-        </Pressable>
+        <View style={styles.headerActions}>
+          <Pressable onPress={() => router.push("/search")} hitSlop={12}>
+            <FontAwesome5 name="search" solid size={22} color={colors.dark.foreground} />
+          </Pressable>
+          <Pressable onPress={() => router.push("/profile")} hitSlop={12}>
+            <FontAwesome5 name="user-circle" solid size={24} color={colors.dark.foreground} />
+          </Pressable>
+        </View>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -80,6 +86,27 @@ export default function Home() {
             </ScrollView>
           </View>
         )}
+
+        {(homeFeed ?? []).map((section) => (
+          <View key={section.id} style={styles.curatedSection}>
+            <Text style={styles.sectionTitle}>{section.name}</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.curatedScroll}>
+              {section.dramas.map((drama) => (
+                <Pressable
+                  key={drama.id}
+                  style={styles.curatedCard}
+                  onPress={() => router.push({ pathname: "/player", params: { dramaId: drama.id, initialEpisode: 1 } })}
+                >
+                  <Image source={{ uri: drama.coverUrl }} style={styles.curatedPoster} />
+                  <View style={styles.freeBadgeSmall}>
+                    <Text style={styles.freeText}>Free EP 1-{drama.freeEpisodesCount}</Text>
+                  </View>
+                  <Text style={styles.curatedTitle} numberOfLines={2}>{drama.titleEn}</Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+        ))}
 
         <View style={styles.categories}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.catScroll}>
@@ -122,6 +149,7 @@ const styles = StyleSheet.create({
   retryButton: { backgroundColor: colors.dark.primary, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20 },
   retryButtonText: { color: colors.dark.primaryForeground, fontWeight: "600" },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, paddingVertical: 12 },
+  headerActions: { flexDirection: "row", alignItems: "center", gap: 16 },
   logo: { fontSize: 24, fontWeight: "bold", color: colors.dark.primary },
   sectionTitle: { fontSize: 18, fontWeight: "bold", color: colors.dark.foreground, marginLeft: 16, marginBottom: 12 },
   historySection: { paddingVertical: 12 },
@@ -131,6 +159,12 @@ const styles = StyleSheet.create({
   historyInfo: { padding: 8 },
   historyTitle: { color: colors.dark.foreground, fontSize: 12, fontWeight: "600" },
   historyEp: { color: colors.dark.secondaryForeground, fontSize: 10, marginTop: 4 },
+  curatedSection: { paddingVertical: 12 },
+  curatedScroll: { paddingHorizontal: 16, gap: 12 },
+  curatedCard: { width: 120 },
+  curatedPoster: { width: "100%", aspectRatio: 3 / 4, borderRadius: 8, backgroundColor: colors.dark.card },
+  curatedTitle: { color: colors.dark.foreground, fontSize: 12, fontWeight: "600", marginTop: 6 },
+  freeBadgeSmall: { position: "absolute", top: 8, right: 8, backgroundColor: colors.dark.accent, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
   categories: { paddingVertical: 8 },
   catScroll: { paddingHorizontal: 16, gap: 8 },
   catBadge: { paddingHorizontal: 16, paddingVertical: 6, borderRadius: 16, backgroundColor: colors.dark.secondary },

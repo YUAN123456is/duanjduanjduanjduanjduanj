@@ -6,7 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type ListDramasParams = {
-publishedOnly?: boolean;
-search?: string;
-};
+export interface WatchProgressUpdate {
+  /** @minimum 1 */
+  lastEpisode: number;
+  /** @minimum 0 */
+  position: number;
+}

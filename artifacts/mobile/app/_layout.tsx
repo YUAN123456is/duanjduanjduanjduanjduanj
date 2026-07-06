@@ -27,6 +27,7 @@ function RootLayoutNav() {
       <Stack.Screen name="(home)" />
       <Stack.Screen name="player" />
       <Stack.Screen name="profile" />
+      <Stack.Screen name="search" />
     </Stack>
   );
 }

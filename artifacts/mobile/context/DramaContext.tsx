@@ -1,47 +1,84 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { createContext, useContext, useMemo } from "react";
+import {
+  useListWatchProgress,
+  useSetWatchProgress,
+  useListFavorites,
+  useAddFavorite,
+  useRemoveFavorite,
+  getListWatchProgressQueryKey,
+  getListFavoritesQueryKey,
+} from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/context/AuthContext";
 
-interface ProgressState {
-  watchHistory: Record<string, { lastEpisode: number; position: number }>; // dramaId -> progress
+interface WatchHistoryEntry {
+  lastEpisode: number;
+  position: number;
 }
 
-interface DramaContextType extends ProgressState {
+interface FavoriteEntry {
+  dramaId: string;
+  titleEn: string;
+  coverUrl: string;
+  freeEpisodesCount?: number;
+  createdAt: string;
+}
+
+interface DramaContextType {
+  watchHistory: Record<string, WatchHistoryEntry>;
+  favorites: FavoriteEntry[];
+  isFavorite: (dramaId: string) => boolean;
   updateProgress: (dramaId: string, episode: number, position: number) => Promise<void>;
+  toggleFavorite: (dramaId: string) => Promise<void>;
 }
 
 const DramaContext = createContext<DramaContextType | null>(null);
 
 export function DramaProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<ProgressState>({
-    watchHistory: {},
+  const { userId } = useAuth();
+  const queryClient = useQueryClient();
+
+  const { data: progressList } = useListWatchProgress(userId ?? "", {
+    query: { enabled: !!userId, queryKey: getListWatchProgressQueryKey(userId ?? "") },
+  });
+  const { data: favoritesList } = useListFavorites(userId ?? "", {
+    query: { enabled: !!userId, queryKey: getListFavoritesQueryKey(userId ?? "") },
   });
 
-  useEffect(() => {
-    AsyncStorage.getItem("drama_state").then((data) => {
-      if (data) {
-        setState(JSON.parse(data));
-      }
-    });
-  }, []);
+  const setWatchProgress = useSetWatchProgress();
+  const addFavorite = useAddFavorite();
+  const removeFavorite = useRemoveFavorite();
 
-  const saveState = async (newState: ProgressState) => {
-    setState(newState);
-    await AsyncStorage.setItem("drama_state", JSON.stringify(newState));
-  };
+  const watchHistory = useMemo(() => {
+    const map: Record<string, WatchHistoryEntry> = {};
+    for (const entry of progressList ?? []) {
+      map[entry.dramaId] = { lastEpisode: entry.lastEpisode, position: entry.position };
+    }
+    return map;
+  }, [progressList]);
+
+  const favorites = useMemo(() => favoritesList ?? [], [favoritesList]);
+
+  const isFavorite = (dramaId: string) => favorites.some((f) => f.dramaId === dramaId);
 
   const updateProgress = async (dramaId: string, episode: number, position: number) => {
-    const newState = {
-      ...state,
-      watchHistory: {
-        ...state.watchHistory,
-        [dramaId]: { lastEpisode: episode, position },
-      },
-    };
-    await saveState(newState);
+    if (!userId) return;
+    await setWatchProgress.mutateAsync({ userId, dramaId, data: { lastEpisode: episode, position } });
+    queryClient.invalidateQueries({ queryKey: getListWatchProgressQueryKey(userId) });
+  };
+
+  const toggleFavorite = async (dramaId: string) => {
+    if (!userId) return;
+    if (isFavorite(dramaId)) {
+      await removeFavorite.mutateAsync({ userId, dramaId });
+    } else {
+      await addFavorite.mutateAsync({ userId, dramaId });
+    }
+    queryClient.invalidateQueries({ queryKey: getListFavoritesQueryKey(userId) });
   };
 
   return (
-    <DramaContext.Provider value={{ ...state, updateProgress }}>
+    <DramaContext.Provider value={{ watchHistory, favorites, isFavorite, updateProgress, toggleFavorite }}>
       {children}
     </DramaContext.Provider>
   );

@@ -11,7 +11,7 @@ import * as WebBrowser from "expo-web-browser";
 export default function Profile() {
   const router = useRouter();
   const { provider, signOut } = useAuth();
-  const { watchHistory } = useDrama();
+  const { watchHistory, favorites } = useDrama();
   const { data: dramas } = useListDramas({ publishedOnly: true });
   const [langModalVisible, setLangModalVisible] = useState(false);
   const [language, setLanguage] = useState("English");
@@ -72,6 +72,26 @@ export default function Profile() {
             </Pressable>
           </View>
         </View>
+
+        {favorites.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Favorites</Text>
+            <View style={styles.card}>
+              {favorites.map((fav, index) => (
+                <View key={fav.dramaId}>
+                  <Pressable
+                    style={styles.historyRow}
+                    onPress={() => router.push({ pathname: "/player", params: { dramaId: fav.dramaId } })}
+                  >
+                    <Text style={styles.historyTitle} numberOfLines={1}>{fav.titleEn}</Text>
+                    <FontAwesome5 name="bookmark" solid size={14} color={colors.dark.accent} />
+                  </Pressable>
+                  {index < favorites.length - 1 && <View style={styles.divider} />}
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
 
         {historyDramas.length > 0 && (
           <View style={styles.section}>

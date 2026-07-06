@@ -22,9 +22,9 @@ A short-drama (micro-drama) streaming app for mobile — vertical swipe-through 
 
 ## Where things live
 
-- `artifacts/mobile` — the Expo mobile app (DramaVerse). Now wired to the real backend via `@workspace/api-client-react` hooks (drama list, playback/unlock state, user registration); no longer uses mock data for content. Local AsyncStorage is still used for `deviceId` persistence and watch-history progress only.
+- `artifacts/mobile` — the Expo mobile app (DramaVerse). Now wired to the real backend via `@workspace/api-client-react` hooks (drama list, playback/unlock state, user registration, favorites, watch-progress); no longer uses mock data for content or local-only progress. Local AsyncStorage is still used for `deviceId` persistence only.
 - `artifacts/mobile/data/mock.ts` — legacy mock drama/episode dataset, no longer imported anywhere; kept only for reference.
-- `artifacts/mobile/context/` — AuthContext (onboarding/ATT + sign-in state, registers device via `useRegisterUser`) and DramaContext (local watch-history progress only; unlock state is now server-computed)
+- `artifacts/mobile/context/` — AuthContext (onboarding/ATT + sign-in state, registers device via `useRegisterUser`) and DramaContext (server-backed favorites + watch-progress, keyed by `userId`; unlock state is separately server-computed via drama playback endpoint)
 - `artifacts/mobile/constants/colors.ts` — brand palette (see Architecture decisions for exact values)
 - `artifacts/api-server` — real Express API backing both the mobile app and admin panel (dramas/episodes/users/unlocks/global config routes, Postgres + Drizzle)
 - `artifacts/admin` — DramaVerse Admin, a React + Vite panel for managing dramas, episodes, and global monetization/ad settings, fully wired to the live API
@@ -36,6 +36,8 @@ A short-drama (micro-drama) streaming app for mobile — vertical swipe-through 
 - "One drama, one policy" model: each drama independently configures `freeEpisodesCount`, `episodesPerAdUnlock`, and `interstitialAdFreq` — not a single global paywall rule.
 - Fixed dark theme only (no light mode): background `#0A0D14`, surface `#1E2330`, divider `#2D3548`, primary accent `#F43F5E` (rose), free/reward badge `#EAB308` (yellow), text `#F8FAFC` / `#94A3B8` / `#64748B`.
 - Real backend is live: Postgres schema for dramas/episodes/users/unlocked-episodes + global config, seeded with 5 dramas/84 episodes. Mobile app and admin panel both consume it through the same OpenAPI-generated hooks. Unlock state (`isUnlocked` per episode) is computed server-side in `GET /api/dramas/playback`, not client-side.
+- Home screen supports curated, admin-managed sections (`home_sections` + `drama_home_sections` tables) in addition to the default drama list; managed from the admin panel's Home Sections page.
+- Favorites and watch-progress are server-persisted (`favorites`, `watch_progress` tables), keyed by `userId` (device-scoped, not full account sync — no cross-device login required). Mobile `DramaContext` reads/writes these via `@workspace/api-client-react` hooks; no client-only fallback state.
 
 ## Product
 

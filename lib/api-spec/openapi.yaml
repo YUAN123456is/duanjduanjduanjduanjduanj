@@ -20,6 +20,12 @@ tags:
     description: Lightweight device-based user accounts
   - name: admin
     description: Admin dashboard analytics
+  - name: home-sections
+    description: Curated homepage section management and public home feed
+  - name: favorites
+    description: Device-scoped drama favorites (save/追剧)
+  - name: watch-progress
+    description: Device-scoped server-persisted per-drama watch progress
 paths:
   /healthz:
     get:
@@ -76,6 +82,11 @@ paths:
           required: false
           schema:
             type: boolean
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
       responses:
         "200":
           description: List of dramas
@@ -311,6 +322,240 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DashboardSummary"
+
+  /home-sections:
+    get:
+      operationId: listHomeSections
+      tags: [home-sections]
+      summary: List all homepage sections with their assigned dramas (admin)
+      responses:
+        "200":
+          description: List of home sections
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HomeSectionWithDramas"
+    post:
+      operationId: createHomeSection
+      tags: [home-sections]
+      summary: Create a homepage section (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HomeSectionInput"
+      responses:
+        "201":
+          description: Created section
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HomeSectionWithDramas"
+
+  /home-sections/{sectionId}:
+    patch:
+      operationId: updateHomeSection
+      tags: [home-sections]
+      summary: Update a homepage section's name or sort order (admin)
+      parameters:
+        - name: sectionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HomeSectionUpdate"
+      responses:
+        "200":
+          description: Updated section
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HomeSectionWithDramas"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteHomeSection
+      tags: [home-sections]
+      summary: Delete a homepage section (admin)
+      parameters:
+        - name: sectionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  /home-sections/{sectionId}/dramas:
+    put:
+      operationId: setHomeSectionDramas
+      tags: [home-sections]
+      summary: Replace the full set of dramas (and their sort weight) assigned to a section (admin)
+      parameters:
+        - name: sectionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateHomeSectionDramasBody"
+      responses:
+        "200":
+          description: Updated section
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HomeSectionWithDramas"
+        "404":
+          description: Not found
+
+  /home-feed:
+    get:
+      operationId: getHomeFeed
+      tags: [home-sections]
+      summary: Get all curated homepage sections with their published dramas, ordered for display (public)
+      responses:
+        "200":
+          description: Ordered homepage sections
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HomeFeedSection"
+
+  /users/{userId}/favorites:
+    get:
+      operationId: listFavorites
+      tags: [favorites]
+      summary: List a user's favorited dramas
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of favorited dramas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FavoriteDrama"
+
+  /users/{userId}/favorites/{dramaId}:
+    put:
+      operationId: addFavorite
+      tags: [favorites]
+      summary: Save a drama to the user's favorites (idempotent)
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: dramaId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Favorite created or already existed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FavoriteDrama"
+        "404":
+          description: User or drama not found
+    delete:
+      operationId: removeFavorite
+      tags: [favorites]
+      summary: Remove a drama from the user's favorites
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: dramaId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Removed
+
+  /users/{userId}/watch-progress:
+    get:
+      operationId: listWatchProgress
+      tags: [watch-progress]
+      summary: List a user's watch progress across all dramas, most recently updated first
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of watch progress entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WatchProgressEntry"
+
+  /users/{userId}/watch-progress/{dramaId}:
+    put:
+      operationId: setWatchProgress
+      tags: [watch-progress]
+      summary: Upsert the user's watch progress for a drama
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: dramaId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WatchProgressUpdate"
+      responses:
+        "200":
+          description: Updated watch progress entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WatchProgressEntry"
+        "404":
+          description: User or drama not found
 
 components:
   schemas:
@@ -667,3 +912,161 @@ components:
           type: integer
         adUnlocksToday:
           type: integer
+
+    HomeSection:
+      type: object
+      required:
+        - id
+        - name
+        - sortOrder
+        - createdAt
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        sortOrder:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    HomeSectionInput:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+        sortOrder:
+          type: integer
+
+    HomeSectionUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        sortOrder:
+          type: integer
+
+    HomeSectionDrama:
+      type: object
+      required:
+        - dramaId
+        - titleEn
+        - coverUrl
+        - sortOrder
+      properties:
+        dramaId:
+          type: string
+        titleEn:
+          type: string
+        coverUrl:
+          type: string
+        sortOrder:
+          type: integer
+
+    HomeSectionWithDramas:
+      allOf:
+        - $ref: "#/components/schemas/HomeSection"
+        - type: object
+          required:
+            - dramas
+          properties:
+            dramas:
+              type: array
+              items:
+                $ref: "#/components/schemas/HomeSectionDrama"
+
+    HomeSectionDramaAssignment:
+      type: object
+      required:
+        - dramaId
+        - sortOrder
+      properties:
+        dramaId:
+          type: string
+        sortOrder:
+          type: integer
+
+    UpdateHomeSectionDramasBody:
+      type: object
+      required:
+        - dramas
+      properties:
+        dramas:
+          type: array
+          items:
+            $ref: "#/components/schemas/HomeSectionDramaAssignment"
+
+    HomeFeedSection:
+      type: object
+      required:
+        - id
+        - name
+        - sortOrder
+        - dramas
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        sortOrder:
+          type: integer
+        dramas:
+          type: array
+          items:
+            $ref: "#/components/schemas/Drama"
+
+    FavoriteDrama:
+      type: object
+      required:
+        - dramaId
+        - createdAt
+        - titleEn
+        - coverUrl
+      properties:
+        dramaId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        titleEn:
+          type: string
+        coverUrl:
+          type: string
+        freeEpisodesCount:
+          type: integer
+
+    WatchProgressEntry:
+      type: object
+      required:
+        - dramaId
+        - lastEpisode
+        - position
+        - updatedAt
+      properties:
+        dramaId:
+          type: string
+        lastEpisode:
+          type: integer
+        position:
+          type: integer
+        updatedAt:
+          type: string
+          format: date-time
+
+    WatchProgressUpdate:
+      type: object
+      required:
+        - lastEpisode
+        - position
+      properties:
+        lastEpisode:
+          type: integer
+          minimum: 1
+        position:
+          type: integer
+          minimum: 0

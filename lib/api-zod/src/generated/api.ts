@@ -56,7 +56,8 @@ export const UpdateGlobalConfigResponse = zod.object({
  * @summary List all dramas
  */
 export const ListDramasQueryParams = zod.object({
-  "publishedOnly": zod.coerce.boolean().optional()
+  "publishedOnly": zod.coerce.boolean().optional(),
+  "search": zod.coerce.string().optional()
 })
 
 export const ListDramasResponseItem = zod.object({
@@ -332,6 +333,234 @@ export const GetDashboardSummaryResponse = zod.object({
   "totalEpisodes": zod.number(),
   "totalViews": zod.number(),
   "adUnlocksToday": zod.number()
+})
+
+
+/**
+ * @summary List all homepage sections with their assigned dramas (admin)
+ */
+export const ListHomeSectionsResponseItem = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "sortOrder": zod.number(),
+  "createdAt": zod.coerce.date()
+}).and(zod.object({
+  "dramas": zod.array(zod.object({
+  "dramaId": zod.string(),
+  "titleEn": zod.string(),
+  "coverUrl": zod.string(),
+  "sortOrder": zod.number()
+}))
+}))
+export const ListHomeSectionsResponse = zod.array(ListHomeSectionsResponseItem)
+
+
+/**
+ * @summary Create a homepage section (admin)
+ */
+
+
+
+export const CreateHomeSectionBody = zod.object({
+  "name": zod.string().min(1),
+  "sortOrder": zod.number().optional()
+})
+
+export const CreateHomeSectionResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "sortOrder": zod.number(),
+  "createdAt": zod.coerce.date()
+}).and(zod.object({
+  "dramas": zod.array(zod.object({
+  "dramaId": zod.string(),
+  "titleEn": zod.string(),
+  "coverUrl": zod.string(),
+  "sortOrder": zod.number()
+}))
+}))
+
+
+/**
+ * @summary Update a homepage section's name or sort order (admin)
+ */
+export const UpdateHomeSectionParams = zod.object({
+  "sectionId": zod.coerce.string()
+})
+
+
+
+
+export const UpdateHomeSectionBody = zod.object({
+  "name": zod.string().min(1).optional(),
+  "sortOrder": zod.number().optional()
+})
+
+export const UpdateHomeSectionResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "sortOrder": zod.number(),
+  "createdAt": zod.coerce.date()
+}).and(zod.object({
+  "dramas": zod.array(zod.object({
+  "dramaId": zod.string(),
+  "titleEn": zod.string(),
+  "coverUrl": zod.string(),
+  "sortOrder": zod.number()
+}))
+}))
+
+
+/**
+ * @summary Delete a homepage section (admin)
+ */
+export const DeleteHomeSectionParams = zod.object({
+  "sectionId": zod.coerce.string()
+})
+
+export const DeleteHomeSectionResponse = zod.void()
+
+
+/**
+ * @summary Replace the full set of dramas (and their sort weight) assigned to a section (admin)
+ */
+export const SetHomeSectionDramasParams = zod.object({
+  "sectionId": zod.coerce.string()
+})
+
+export const SetHomeSectionDramasBody = zod.object({
+  "dramas": zod.array(zod.object({
+  "dramaId": zod.string(),
+  "sortOrder": zod.number()
+}))
+})
+
+export const SetHomeSectionDramasResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "sortOrder": zod.number(),
+  "createdAt": zod.coerce.date()
+}).and(zod.object({
+  "dramas": zod.array(zod.object({
+  "dramaId": zod.string(),
+  "titleEn": zod.string(),
+  "coverUrl": zod.string(),
+  "sortOrder": zod.number()
+}))
+}))
+
+
+/**
+ * @summary Get all curated homepage sections with their published dramas, ordered for display (public)
+ */
+export const GetHomeFeedResponseItem = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "sortOrder": zod.number(),
+  "dramas": zod.array(zod.object({
+  "id": zod.string(),
+  "titleEn": zod.string(),
+  "titleEs": zod.string().nullish(),
+  "titleZhTw": zod.string().nullish(),
+  "coverUrl": zod.string(),
+  "description": zod.string().nullish(),
+  "tags": zod.array(zod.string()),
+  "totalEpisodes": zod.number(),
+  "viewsCount": zod.number(),
+  "freeEpisodesCount": zod.number(),
+  "episodesPerAdUnlock": zod.number(),
+  "interstitialAdFreq": zod.number(),
+  "isPublished": zod.boolean(),
+  "createdAt": zod.coerce.date()
+}))
+})
+export const GetHomeFeedResponse = zod.array(GetHomeFeedResponseItem)
+
+
+/**
+ * @summary List a user's favorited dramas
+ */
+export const ListFavoritesParams = zod.object({
+  "userId": zod.coerce.string()
+})
+
+export const ListFavoritesResponseItem = zod.object({
+  "dramaId": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "titleEn": zod.string(),
+  "coverUrl": zod.string(),
+  "freeEpisodesCount": zod.number().optional()
+})
+export const ListFavoritesResponse = zod.array(ListFavoritesResponseItem)
+
+
+/**
+ * @summary Save a drama to the user's favorites (idempotent)
+ */
+export const AddFavoriteParams = zod.object({
+  "userId": zod.coerce.string(),
+  "dramaId": zod.coerce.string()
+})
+
+export const AddFavoriteResponse = zod.object({
+  "dramaId": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "titleEn": zod.string(),
+  "coverUrl": zod.string(),
+  "freeEpisodesCount": zod.number().optional()
+})
+
+
+/**
+ * @summary Remove a drama from the user's favorites
+ */
+export const RemoveFavoriteParams = zod.object({
+  "userId": zod.coerce.string(),
+  "dramaId": zod.coerce.string()
+})
+
+export const RemoveFavoriteResponse = zod.void()
+
+
+/**
+ * @summary List a user's watch progress across all dramas, most recently updated first
+ */
+export const ListWatchProgressParams = zod.object({
+  "userId": zod.coerce.string()
+})
+
+export const ListWatchProgressResponseItem = zod.object({
+  "dramaId": zod.string(),
+  "lastEpisode": zod.number(),
+  "position": zod.number(),
+  "updatedAt": zod.coerce.date()
+})
+export const ListWatchProgressResponse = zod.array(ListWatchProgressResponseItem)
+
+
+/**
+ * @summary Upsert the user's watch progress for a drama
+ */
+export const SetWatchProgressParams = zod.object({
+  "userId": zod.coerce.string(),
+  "dramaId": zod.coerce.string()
+})
+
+
+export const setWatchProgressBodyPositionMin = 0;
+
+
+
+export const SetWatchProgressBody = zod.object({
+  "lastEpisode": zod.number().min(1),
+  "position": zod.number().min(setWatchProgressBodyPositionMin)
+})
+
+export const SetWatchProgressResponse = zod.object({
+  "dramaId": zod.string(),
+  "lastEpisode": zod.number(),
+  "position": zod.number(),
+  "updatedAt": zod.coerce.date()
 })
 
 

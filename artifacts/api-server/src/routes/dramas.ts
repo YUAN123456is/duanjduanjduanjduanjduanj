@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and, ilike, or } from "drizzle-orm";
 import { db, dramasTable, episodesTable, unlockedEpisodesTable } from "@workspace/db";
 import {
   ListDramasQueryParams,
@@ -44,7 +44,18 @@ router.get("/dramas", async (req, res): Promise<void> => {
     })
     .from(dramasTable)
     .leftJoin(episodesTable, eq(episodesTable.dramaId, dramasTable.id))
-    .where(query.data.publishedOnly ? eq(dramasTable.isPublished, true) : undefined)
+    .where(
+      and(
+        query.data.publishedOnly ? eq(dramasTable.isPublished, true) : undefined,
+        query.data.search
+          ? or(
+              ilike(dramasTable.titleEn, `%${query.data.search}%`),
+              ilike(dramasTable.titleEs, `%${query.data.search}%`),
+              ilike(dramasTable.titleZhTw, `%${query.data.search}%`),
+            )
+          : undefined,
+      ),
+    )
     .groupBy(dramasTable.id)
     .orderBy(dramasTable.createdAt);
 

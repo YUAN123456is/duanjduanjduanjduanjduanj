@@ -199,8 +199,77 @@ export interface DashboardSummary {
   adUnlocksToday: number;
 }
 
+export interface HomeSection {
+  id: string;
+  name: string;
+  sortOrder: number;
+  createdAt: string;
+}
+
+export interface HomeSectionInput {
+  /** @minLength 1 */
+  name: string;
+  sortOrder?: number;
+}
+
+export interface HomeSectionUpdate {
+  /** @minLength 1 */
+  name?: string;
+  sortOrder?: number;
+}
+
+export interface HomeSectionDrama {
+  dramaId: string;
+  titleEn: string;
+  coverUrl: string;
+  sortOrder: number;
+}
+
+export type HomeSectionWithDramas = HomeSection & {
+  dramas: HomeSectionDrama[];
+};
+
+export interface HomeSectionDramaAssignment {
+  dramaId: string;
+  sortOrder: number;
+}
+
+export interface UpdateHomeSectionDramasBody {
+  dramas: HomeSectionDramaAssignment[];
+}
+
+export interface HomeFeedSection {
+  id: string;
+  name: string;
+  sortOrder: number;
+  dramas: Drama[];
+}
+
+export interface FavoriteDrama {
+  dramaId: string;
+  createdAt: string;
+  titleEn: string;
+  coverUrl: string;
+  freeEpisodesCount?: number;
+}
+
+export interface WatchProgressEntry {
+  dramaId: string;
+  lastEpisode: number;
+  position: number;
+  updatedAt: string;
+}
+
+export interface WatchProgressUpdate {
+  /** @minimum 1 */
+  lastEpisode: number;
+  /** @minimum 0 */
+  position: number;
+}
+
 export type ListDramasParams = {
 publishedOnly?: boolean;
+search?: string;
 };
 
 export type GetDramaPlaybackParams = {

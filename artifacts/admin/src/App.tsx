@@ -7,6 +7,7 @@ import { Layout } from "@/components/layout/Layout";
 import Dashboard from "@/pages/Dashboard";
 import DramasList from "@/pages/DramasList";
 import DramaEdit from "@/pages/DramaEdit";
+import HomeSections from "@/pages/HomeSections";
 import Settings from "@/pages/Settings";
 
 const queryClient = new QueryClient({
@@ -25,6 +26,7 @@ function Router() {
         <Route path="/" component={Dashboard} />
         <Route path="/dramas" component={DramasList} />
         <Route path="/dramas/:id" component={DramaEdit} />
+        <Route path="/home-sections" component={HomeSections} />
         <Route path="/settings" component={Settings} />
         <Route component={NotFound} />
       </Switch>

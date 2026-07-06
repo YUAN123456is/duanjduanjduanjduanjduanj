@@ -5,6 +5,8 @@ import dramasRouter from "./dramas";
 import episodesRouter from "./episodes";
 import usersRouter from "./users";
 import adminRouter from "./admin";
+import homeSectionsRouter from "./home-sections";
+import favoritesRouter from "./favorites";
 
 const router: IRouter = Router();
 
@@ -14,5 +16,7 @@ router.use(dramasRouter);
 router.use(episodesRouter);
 router.use(usersRouter);
 router.use(adminRouter);
+router.use(homeSectionsRouter);
+router.use(favoritesRouter);
 
 export default router;

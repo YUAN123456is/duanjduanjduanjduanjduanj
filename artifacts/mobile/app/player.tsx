@@ -146,7 +146,7 @@ export default function PlayerScreen() {
   const initialEpisode = parseInt((params.initialEpisode as string) || "1", 10);
 
   const { userId } = useAuth();
-  const { updateProgress } = useDrama();
+  const { updateProgress, isFavorite, toggleFavorite } = useDrama();
   const queryClient = useQueryClient();
 
   const { data: drama, isLoading, isError } = useGetDramaPlayback(
@@ -276,7 +276,7 @@ export default function PlayerScreen() {
           <FontAwesome5 name="chevron-left" solid size={20} color={colors.dark.foreground} />
         </Pressable>
         <View style={styles.topRight}>
-          <Pressable style={styles.iconButton}>
+          <Pressable style={styles.iconButton} onPress={() => router.push("/search")}>
             <FontAwesome5 name="search" solid size={20} color={colors.dark.foreground} />
           </Pressable>
           <Pressable style={styles.rewardButton} onPress={() => setShowAdWall(true)}>
@@ -293,9 +293,9 @@ export default function PlayerScreen() {
           </View>
           <Text style={styles.actionText}>Like</Text>
         </Pressable>
-        <Pressable style={styles.actionItem}>
-          <View style={styles.actionIconWrap}>
-            <FontAwesome5 name="bookmark" solid size={24} color={colors.dark.foreground} />
+        <Pressable style={styles.actionItem} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); toggleFavorite(dramaId); }}>
+          <View style={[styles.actionIconWrap, isFavorite(dramaId) && styles.actionIconWrapActive]}>
+            <FontAwesome5 name="bookmark" solid size={24} color={isFavorite(dramaId) ? colors.dark.accent : colors.dark.foreground} />
           </View>
           <Text style={styles.actionText}>Save</Text>
         </Pressable>

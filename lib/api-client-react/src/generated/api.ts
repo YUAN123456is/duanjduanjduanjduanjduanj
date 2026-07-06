@@ -29,15 +29,23 @@ import type {
   Episode,
   EpisodeInput,
   EpisodeUpdate,
+  FavoriteDrama,
   GetDramaPlaybackParams,
   GlobalConfig,
   GlobalConfigUpdate,
   HealthStatus,
+  HomeFeedSection,
+  HomeSectionInput,
+  HomeSectionUpdate,
+  HomeSectionWithDramas,
   ListDramasParams,
   UnlockRequest,
   UnlockResult,
+  UpdateHomeSectionDramasBody,
   User,
-  UserRegisterInput
+  UserRegisterInput,
+  WatchProgressEntry,
+  WatchProgressUpdate
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -1176,4 +1184,811 @@ export function useGetDashboardSummary<TData = Awaited<ReturnType<typeof getDash
 
 
 
+
+export const getListHomeSectionsUrl = () => {
+
+
+
+
+  return `/api/home-sections`
+}
+
+/**
+ * @summary List all homepage sections with their assigned dramas (admin)
+ */
+export const listHomeSections = async ( options?: RequestInit): Promise<HomeSectionWithDramas[]> => {
+
+  return customFetch<HomeSectionWithDramas[]>(getListHomeSectionsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListHomeSectionsQueryKey = () => {
+    return [
+    `/api/home-sections`
+    ] as const;
+    }
+
+
+export const getListHomeSectionsQueryOptions = <TData = Awaited<ReturnType<typeof listHomeSections>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listHomeSections>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListHomeSectionsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listHomeSections>>> = ({ signal }) => listHomeSections({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listHomeSections>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListHomeSectionsQueryResult = NonNullable<Awaited<ReturnType<typeof listHomeSections>>>
+export type ListHomeSectionsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all homepage sections with their assigned dramas (admin)
+ */
+
+export function useListHomeSections<TData = Awaited<ReturnType<typeof listHomeSections>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listHomeSections>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListHomeSectionsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateHomeSectionUrl = () => {
+
+
+
+
+  return `/api/home-sections`
+}
+
+/**
+ * @summary Create a homepage section (admin)
+ */
+export const createHomeSection = async (homeSectionInput: HomeSectionInput, options?: RequestInit): Promise<HomeSectionWithDramas> => {
+
+  return customFetch<HomeSectionWithDramas>(getCreateHomeSectionUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(homeSectionInput)
+  }
+);}
+
+
+
+
+export const getCreateHomeSectionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createHomeSection>>, TError,{data: BodyType<HomeSectionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createHomeSection>>, TError,{data: BodyType<HomeSectionInput>}, TContext> => {
+
+const mutationKey = ['createHomeSection'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createHomeSection>>, {data: BodyType<HomeSectionInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createHomeSection(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateHomeSectionMutationResult = NonNullable<Awaited<ReturnType<typeof createHomeSection>>>
+    export type CreateHomeSectionMutationBody = BodyType<HomeSectionInput>
+    export type CreateHomeSectionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a homepage section (admin)
+ */
+export const useCreateHomeSection = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createHomeSection>>, TError,{data: BodyType<HomeSectionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createHomeSection>>,
+        TError,
+        {data: BodyType<HomeSectionInput>},
+        TContext
+      > => {
+      return useMutation(getCreateHomeSectionMutationOptions(options));
+    }
+
+export const getUpdateHomeSectionUrl = (sectionId: string,) => {
+
+
+
+
+  return `/api/home-sections/${sectionId}`
+}
+
+/**
+ * @summary Update a homepage section's name or sort order (admin)
+ */
+export const updateHomeSection = async (sectionId: string,
+    homeSectionUpdate: HomeSectionUpdate, options?: RequestInit): Promise<HomeSectionWithDramas> => {
+
+  return customFetch<HomeSectionWithDramas>(getUpdateHomeSectionUrl(sectionId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(homeSectionUpdate)
+  }
+);}
+
+
+
+
+export const getUpdateHomeSectionMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateHomeSection>>, TError,{sectionId: string;data: BodyType<HomeSectionUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateHomeSection>>, TError,{sectionId: string;data: BodyType<HomeSectionUpdate>}, TContext> => {
+
+const mutationKey = ['updateHomeSection'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateHomeSection>>, {sectionId: string;data: BodyType<HomeSectionUpdate>}> = (props) => {
+          const {sectionId,data} = props ?? {};
+
+          return  updateHomeSection(sectionId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateHomeSectionMutationResult = NonNullable<Awaited<ReturnType<typeof updateHomeSection>>>
+    export type UpdateHomeSectionMutationBody = BodyType<HomeSectionUpdate>
+    export type UpdateHomeSectionMutationError = ErrorType<void>
+
+    /**
+ * @summary Update a homepage section's name or sort order (admin)
+ */
+export const useUpdateHomeSection = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateHomeSection>>, TError,{sectionId: string;data: BodyType<HomeSectionUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateHomeSection>>,
+        TError,
+        {sectionId: string;data: BodyType<HomeSectionUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateHomeSectionMutationOptions(options));
+    }
+
+export const getDeleteHomeSectionUrl = (sectionId: string,) => {
+
+
+
+
+  return `/api/home-sections/${sectionId}`
+}
+
+/**
+ * @summary Delete a homepage section (admin)
+ */
+export const deleteHomeSection = async (sectionId: string, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteHomeSectionUrl(sectionId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteHomeSectionMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteHomeSection>>, TError,{sectionId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteHomeSection>>, TError,{sectionId: string}, TContext> => {
+
+const mutationKey = ['deleteHomeSection'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteHomeSection>>, {sectionId: string}> = (props) => {
+          const {sectionId} = props ?? {};
+
+          return  deleteHomeSection(sectionId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteHomeSectionMutationResult = NonNullable<Awaited<ReturnType<typeof deleteHomeSection>>>
+
+    export type DeleteHomeSectionMutationError = ErrorType<void>
+
+    /**
+ * @summary Delete a homepage section (admin)
+ */
+export const useDeleteHomeSection = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteHomeSection>>, TError,{sectionId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteHomeSection>>,
+        TError,
+        {sectionId: string},
+        TContext
+      > => {
+      return useMutation(getDeleteHomeSectionMutationOptions(options));
+    }
+
+export const getSetHomeSectionDramasUrl = (sectionId: string,) => {
+
+
+
+
+  return `/api/home-sections/${sectionId}/dramas`
+}
+
+/**
+ * @summary Replace the full set of dramas (and their sort weight) assigned to a section (admin)
+ */
+export const setHomeSectionDramas = async (sectionId: string,
+    updateHomeSectionDramasBody: UpdateHomeSectionDramasBody, options?: RequestInit): Promise<HomeSectionWithDramas> => {
+
+  return customFetch<HomeSectionWithDramas>(getSetHomeSectionDramasUrl(sectionId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(updateHomeSectionDramasBody)
+  }
+);}
+
+
+
+
+export const getSetHomeSectionDramasMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setHomeSectionDramas>>, TError,{sectionId: string;data: BodyType<UpdateHomeSectionDramasBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setHomeSectionDramas>>, TError,{sectionId: string;data: BodyType<UpdateHomeSectionDramasBody>}, TContext> => {
+
+const mutationKey = ['setHomeSectionDramas'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setHomeSectionDramas>>, {sectionId: string;data: BodyType<UpdateHomeSectionDramasBody>}> = (props) => {
+          const {sectionId,data} = props ?? {};
+
+          return  setHomeSectionDramas(sectionId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetHomeSectionDramasMutationResult = NonNullable<Awaited<ReturnType<typeof setHomeSectionDramas>>>
+    export type SetHomeSectionDramasMutationBody = BodyType<UpdateHomeSectionDramasBody>
+    export type SetHomeSectionDramasMutationError = ErrorType<void>
+
+    /**
+ * @summary Replace the full set of dramas (and their sort weight) assigned to a section (admin)
+ */
+export const useSetHomeSectionDramas = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setHomeSectionDramas>>, TError,{sectionId: string;data: BodyType<UpdateHomeSectionDramasBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof setHomeSectionDramas>>,
+        TError,
+        {sectionId: string;data: BodyType<UpdateHomeSectionDramasBody>},
+        TContext
+      > => {
+      return useMutation(getSetHomeSectionDramasMutationOptions(options));
+    }
+
+export const getGetHomeFeedUrl = () => {
+
+
+
+
+  return `/api/home-feed`
+}
+
+/**
+ * @summary Get all curated homepage sections with their published dramas, ordered for display (public)
+ */
+export const getHomeFeed = async ( options?: RequestInit): Promise<HomeFeedSection[]> => {
+
+  return customFetch<HomeFeedSection[]>(getGetHomeFeedUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetHomeFeedQueryKey = () => {
+    return [
+    `/api/home-feed`
+    ] as const;
+    }
+
+
+export const getGetHomeFeedQueryOptions = <TData = Awaited<ReturnType<typeof getHomeFeed>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getHomeFeed>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetHomeFeedQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getHomeFeed>>> = ({ signal }) => getHomeFeed({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getHomeFeed>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetHomeFeedQueryResult = NonNullable<Awaited<ReturnType<typeof getHomeFeed>>>
+export type GetHomeFeedQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get all curated homepage sections with their published dramas, ordered for display (public)
+ */
+
+export function useGetHomeFeed<TData = Awaited<ReturnType<typeof getHomeFeed>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getHomeFeed>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetHomeFeedQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListFavoritesUrl = (userId: string,) => {
+
+
+
+
+  return `/api/users/${userId}/favorites`
+}
+
+/**
+ * @summary List a user's favorited dramas
+ */
+export const listFavorites = async (userId: string, options?: RequestInit): Promise<FavoriteDrama[]> => {
+
+  return customFetch<FavoriteDrama[]>(getListFavoritesUrl(userId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListFavoritesQueryKey = (userId: string,) => {
+    return [
+    `/api/users/${userId}/favorites`
+    ] as const;
+    }
+
+
+export const getListFavoritesQueryOptions = <TData = Awaited<ReturnType<typeof listFavorites>>, TError = ErrorType<unknown>>(userId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listFavorites>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListFavoritesQueryKey(userId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listFavorites>>> = ({ signal }) => listFavorites(userId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: userId !== null && userId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listFavorites>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListFavoritesQueryResult = NonNullable<Awaited<ReturnType<typeof listFavorites>>>
+export type ListFavoritesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List a user's favorited dramas
+ */
+
+export function useListFavorites<TData = Awaited<ReturnType<typeof listFavorites>>, TError = ErrorType<unknown>>(
+ userId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listFavorites>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListFavoritesQueryOptions(userId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getAddFavoriteUrl = (userId: string,
+    dramaId: string,) => {
+
+
+
+
+  return `/api/users/${userId}/favorites/${dramaId}`
+}
+
+/**
+ * @summary Save a drama to the user's favorites (idempotent)
+ */
+export const addFavorite = async (userId: string,
+    dramaId: string, options?: RequestInit): Promise<FavoriteDrama> => {
+
+  return customFetch<FavoriteDrama>(getAddFavoriteUrl(userId,dramaId),
+  {
+    ...options,
+    method: 'PUT'
+
+
+  }
+);}
+
+
+
+
+export const getAddFavoriteMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addFavorite>>, TError,{userId: string;dramaId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof addFavorite>>, TError,{userId: string;dramaId: string}, TContext> => {
+
+const mutationKey = ['addFavorite'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addFavorite>>, {userId: string;dramaId: string}> = (props) => {
+          const {userId,dramaId} = props ?? {};
+
+          return  addFavorite(userId,dramaId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddFavoriteMutationResult = NonNullable<Awaited<ReturnType<typeof addFavorite>>>
+
+    export type AddFavoriteMutationError = ErrorType<void>
+
+    /**
+ * @summary Save a drama to the user's favorites (idempotent)
+ */
+export const useAddFavorite = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addFavorite>>, TError,{userId: string;dramaId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof addFavorite>>,
+        TError,
+        {userId: string;dramaId: string},
+        TContext
+      > => {
+      return useMutation(getAddFavoriteMutationOptions(options));
+    }
+
+export const getRemoveFavoriteUrl = (userId: string,
+    dramaId: string,) => {
+
+
+
+
+  return `/api/users/${userId}/favorites/${dramaId}`
+}
+
+/**
+ * @summary Remove a drama from the user's favorites
+ */
+export const removeFavorite = async (userId: string,
+    dramaId: string, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getRemoveFavoriteUrl(userId,dramaId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getRemoveFavoriteMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeFavorite>>, TError,{userId: string;dramaId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof removeFavorite>>, TError,{userId: string;dramaId: string}, TContext> => {
+
+const mutationKey = ['removeFavorite'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removeFavorite>>, {userId: string;dramaId: string}> = (props) => {
+          const {userId,dramaId} = props ?? {};
+
+          return  removeFavorite(userId,dramaId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RemoveFavoriteMutationResult = NonNullable<Awaited<ReturnType<typeof removeFavorite>>>
+
+    export type RemoveFavoriteMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Remove a drama from the user's favorites
+ */
+export const useRemoveFavorite = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeFavorite>>, TError,{userId: string;dramaId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof removeFavorite>>,
+        TError,
+        {userId: string;dramaId: string},
+        TContext
+      > => {
+      return useMutation(getRemoveFavoriteMutationOptions(options));
+    }
+
+export const getListWatchProgressUrl = (userId: string,) => {
+
+
+
+
+  return `/api/users/${userId}/watch-progress`
+}
+
+/**
+ * @summary List a user's watch progress across all dramas, most recently updated first
+ */
+export const listWatchProgress = async (userId: string, options?: RequestInit): Promise<WatchProgressEntry[]> => {
+
+  return customFetch<WatchProgressEntry[]>(getListWatchProgressUrl(userId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListWatchProgressQueryKey = (userId: string,) => {
+    return [
+    `/api/users/${userId}/watch-progress`
+    ] as const;
+    }
+
+
+export const getListWatchProgressQueryOptions = <TData = Awaited<ReturnType<typeof listWatchProgress>>, TError = ErrorType<unknown>>(userId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listWatchProgress>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListWatchProgressQueryKey(userId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listWatchProgress>>> = ({ signal }) => listWatchProgress(userId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: userId !== null && userId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listWatchProgress>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListWatchProgressQueryResult = NonNullable<Awaited<ReturnType<typeof listWatchProgress>>>
+export type ListWatchProgressQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List a user's watch progress across all dramas, most recently updated first
+ */
+
+export function useListWatchProgress<TData = Awaited<ReturnType<typeof listWatchProgress>>, TError = ErrorType<unknown>>(
+ userId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listWatchProgress>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListWatchProgressQueryOptions(userId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSetWatchProgressUrl = (userId: string,
+    dramaId: string,) => {
+
+
+
+
+  return `/api/users/${userId}/watch-progress/${dramaId}`
+}
+
+/**
+ * @summary Upsert the user's watch progress for a drama
+ */
+export const setWatchProgress = async (userId: string,
+    dramaId: string,
+    watchProgressUpdate: WatchProgressUpdate, options?: RequestInit): Promise<WatchProgressEntry> => {
+
+  return customFetch<WatchProgressEntry>(getSetWatchProgressUrl(userId,dramaId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(watchProgressUpdate)
+  }
+);}
+
+
+
+
+export const getSetWatchProgressMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setWatchProgress>>, TError,{userId: string;dramaId: string;data: BodyType<WatchProgressUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setWatchProgress>>, TError,{userId: string;dramaId: string;data: BodyType<WatchProgressUpdate>}, TContext> => {
+
+const mutationKey = ['setWatchProgress'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setWatchProgress>>, {userId: string;dramaId: string;data: BodyType<WatchProgressUpdate>}> = (props) => {
+          const {userId,dramaId,data} = props ?? {};
+
+          return  setWatchProgress(userId,dramaId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetWatchProgressMutationResult = NonNullable<Awaited<ReturnType<typeof setWatchProgress>>>
+    export type SetWatchProgressMutationBody = BodyType<WatchProgressUpdate>
+    export type SetWatchProgressMutationError = ErrorType<void>
+
+    /**
+ * @summary Upsert the user's watch progress for a drama
+ */
+export const useSetWatchProgress = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setWatchProgress>>, TError,{userId: string;dramaId: string;data: BodyType<WatchProgressUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof setWatchProgress>>,
+        TError,
+        {userId: string;dramaId: string;data: BodyType<WatchProgressUpdate>},
+        TContext
+      > => {
+      return useMutation(getSetWatchProgressMutationOptions(options));
+    }
 

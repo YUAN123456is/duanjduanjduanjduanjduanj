@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Film, Settings } from "lucide-react";
+import { LayoutDashboard, Film, Settings, LayoutList } from "lucide-react";
 
 export function Sidebar() {
   const [location] = useLocation();
@@ -8,6 +8,7 @@ export function Sidebar() {
   const links = [
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
     { href: "/dramas", label: "Dramas", icon: Film },
+    { href: "/home-sections", label: "Home Sections", icon: LayoutList },
     { href: "/settings", label: "Settings", icon: Settings },
   ];
 
