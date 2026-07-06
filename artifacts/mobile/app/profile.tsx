@@ -135,7 +135,7 @@ export default function Profile() {
           <Pressable style={styles.modalBackdrop} onPress={() => setLangModalVisible(false)} />
           <View style={styles.modalSheet}>
             <Text style={styles.modalTitle}>Select Language</Text>
-            {["English", "Español", "繁體中文"].map(lang => (
+            {["English", "Español", "繁體中文", "ไทย", "日本語"].map(lang => (
               <Pressable 
                 key={lang} 
                 style={styles.langRow}
