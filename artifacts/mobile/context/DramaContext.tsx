@@ -64,18 +64,26 @@ export function DramaProvider({ children }: { children: React.ReactNode }) {
 
   const updateProgress = async (dramaId: string, episode: number, position: number) => {
     if (!userId) return;
-    await setWatchProgress.mutateAsync({ userId, dramaId, data: { lastEpisode: episode, position } });
-    queryClient.invalidateQueries({ queryKey: getListWatchProgressQueryKey(userId) });
+    try {
+      await setWatchProgress.mutateAsync({ userId, dramaId, data: { lastEpisode: episode, position } });
+      queryClient.invalidateQueries({ queryKey: getListWatchProgressQueryKey(userId) });
+    } catch {
+      // best-effort — stale userId or network error, don't crash
+    }
   };
 
   const toggleFavorite = async (dramaId: string) => {
     if (!userId) return;
-    if (isFavorite(dramaId)) {
-      await removeFavorite.mutateAsync({ userId, dramaId });
-    } else {
-      await addFavorite.mutateAsync({ userId, dramaId });
+    try {
+      if (isFavorite(dramaId)) {
+        await removeFavorite.mutateAsync({ userId, dramaId });
+      } else {
+        await addFavorite.mutateAsync({ userId, dramaId });
+      }
+      queryClient.invalidateQueries({ queryKey: getListFavoritesQueryKey(userId) });
+    } catch {
+      // best-effort — stale userId or network error, don't crash
     }
-    queryClient.invalidateQueries({ queryKey: getListFavoritesQueryKey(userId) });
   };
 
   return (

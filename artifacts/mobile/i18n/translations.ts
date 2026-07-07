@@ -61,6 +61,17 @@ const en = {
   "profile.cancel": "Cancel",
   "profile.delete": "Delete",
   "profile.selectLanguage": "Select Language",
+
+  "player.like": "Like",
+  "player.save": "Save",
+  "player.episodes": "Episodes",
+  "player.share": "Share",
+  "player.unlocked": "Unlocked",
+  "player.preview": "Preview",
+  "player.episode": "Episode {n} / {total}",
+  "player.notFound": "Drama not found",
+  "player.noEpisodes": "No episodes available yet",
+  "player.previewPlaying": "Preview playing...",
 };
 
 const es: typeof en = {
@@ -109,6 +120,17 @@ const es: typeof en = {
   "profile.cancel": "Cancelar",
   "profile.delete": "Eliminar",
   "profile.selectLanguage": "Seleccionar idioma",
+
+  "player.like": "Me gusta",
+  "player.save": "Guardar",
+  "player.episodes": "Episodios",
+  "player.share": "Compartir",
+  "player.unlocked": "Desbloqueado",
+  "player.preview": "Vista previa",
+  "player.episode": "Episodio {n} / {total}",
+  "player.notFound": "Drama no encontrado",
+  "player.noEpisodes": "Sin episodios disponibles",
+  "player.previewPlaying": "Reproduciendo vista previa...",
 };
 
 const pt: typeof en = {
@@ -157,6 +179,17 @@ const pt: typeof en = {
   "profile.cancel": "Cancelar",
   "profile.delete": "Excluir",
   "profile.selectLanguage": "Selecionar idioma",
+
+  "player.like": "Curtir",
+  "player.save": "Salvar",
+  "player.episodes": "Episódios",
+  "player.share": "Compartilhar",
+  "player.unlocked": "Desbloqueado",
+  "player.preview": "Prévia",
+  "player.episode": "Episódio {n} / {total}",
+  "player.notFound": "Dorama não encontrado",
+  "player.noEpisodes": "Sem episódios disponíveis",
+  "player.previewPlaying": "Reproduzindo prévia...",
 };
 
 const ar: typeof en = {
@@ -205,6 +238,17 @@ const ar: typeof en = {
   "profile.cancel": "إلغاء",
   "profile.delete": "حذف",
   "profile.selectLanguage": "اختر اللغة",
+
+  "player.like": "إعجاب",
+  "player.save": "حفظ",
+  "player.episodes": "الحلقات",
+  "player.share": "مشاركة",
+  "player.unlocked": "مفتوح",
+  "player.preview": "معاينة",
+  "player.episode": "الحلقة {n} / {total}",
+  "player.notFound": "الدراما غير موجودة",
+  "player.noEpisodes": "لا توجد حلقات متاحة حتى الآن",
+  "player.previewPlaying": "تشغيل المعاينة...",
 };
 
 const th: typeof en = {
@@ -253,6 +297,17 @@ const th: typeof en = {
   "profile.cancel": "ยกเลิก",
   "profile.delete": "ลบ",
   "profile.selectLanguage": "เลือกภาษา",
+
+  "player.like": "ถูกใจ",
+  "player.save": "บันทึก",
+  "player.episodes": "ตอน",
+  "player.share": "แชร์",
+  "player.unlocked": "ปลดล็อกแล้ว",
+  "player.preview": "ตัวอย่าง",
+  "player.episode": "ตอนที่ {n} / {total}",
+  "player.notFound": "ไม่พบละคร",
+  "player.noEpisodes": "ยังไม่มีตอนที่พร้อมให้ดู",
+  "player.previewPlaying": "กำลังเล่นตัวอย่าง...",
 };
 
 const vi: typeof en = {
@@ -301,6 +356,17 @@ const vi: typeof en = {
   "profile.cancel": "Hủy",
   "profile.delete": "Xóa",
   "profile.selectLanguage": "Chọn ngôn ngữ",
+
+  "player.like": "Thích",
+  "player.save": "Lưu",
+  "player.episodes": "Tập phim",
+  "player.share": "Chia sẻ",
+  "player.unlocked": "Đã mở khóa",
+  "player.preview": "Xem trước",
+  "player.episode": "Tập {n} / {total}",
+  "player.notFound": "Không tìm thấy phim",
+  "player.noEpisodes": "Chưa có tập nào",
+  "player.previewPlaying": "Đang phát xem trước...",
 };
 
 const id_: typeof en = {
@@ -349,6 +415,17 @@ const id_: typeof en = {
   "profile.cancel": "Batal",
   "profile.delete": "Hapus",
   "profile.selectLanguage": "Pilih Bahasa",
+
+  "player.like": "Suka",
+  "player.save": "Simpan",
+  "player.episodes": "Episode",
+  "player.share": "Bagikan",
+  "player.unlocked": "Terbuka",
+  "player.preview": "Pratinjau",
+  "player.episode": "Episode {n} / {total}",
+  "player.notFound": "Drama tidak ditemukan",
+  "player.noEpisodes": "Belum ada episode tersedia",
+  "player.previewPlaying": "Memutar pratinjau...",
 };
 
 const ja: typeof en = {
@@ -397,6 +474,17 @@ const ja: typeof en = {
   "profile.cancel": "キャンセル",
   "profile.delete": "削除",
   "profile.selectLanguage": "言語を選択",
+
+  "player.like": "いいね",
+  "player.save": "保存",
+  "player.episodes": "エピソード",
+  "player.share": "シェア",
+  "player.unlocked": "解放済み",
+  "player.preview": "プレビュー",
+  "player.episode": "第{n}話 / 全{total}話",
+  "player.notFound": "ドラマが見つかりません",
+  "player.noEpisodes": "エピソードはまだありません",
+  "player.previewPlaying": "プレビュー再生中...",
 };
 
 const ko: typeof en = {
@@ -445,6 +533,17 @@ const ko: typeof en = {
   "profile.cancel": "취소",
   "profile.delete": "삭제",
   "profile.selectLanguage": "언어 선택",
+
+  "player.like": "좋아요",
+  "player.save": "저장",
+  "player.episodes": "에피소드",
+  "player.share": "공유",
+  "player.unlocked": "잠금 해제됨",
+  "player.preview": "미리보기",
+  "player.episode": "{n}화 / {total}화",
+  "player.notFound": "드라마를 찾을 수 없습니다",
+  "player.noEpisodes": "아직 에피소드가 없습니다",
+  "player.previewPlaying": "미리보기 재생 중...",
 };
 
 const zhHant: typeof en = {
@@ -493,6 +592,17 @@ const zhHant: typeof en = {
   "profile.cancel": "取消",
   "profile.delete": "刪除",
   "profile.selectLanguage": "選擇語言",
+
+  "player.like": "喜歡",
+  "player.save": "收藏",
+  "player.episodes": "集數",
+  "player.share": "分享",
+  "player.unlocked": "已解鎖",
+  "player.preview": "預覽",
+  "player.episode": "第{n}集 / 共{total}集",
+  "player.notFound": "找不到短劇",
+  "player.noEpisodes": "目前還沒有集數",
+  "player.previewPlaying": "正在播放預覽...",
 };
 
 export const translations: Record<string, typeof en> = {

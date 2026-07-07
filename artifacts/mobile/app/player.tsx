@@ -23,10 +23,10 @@ import ReportSheet from '@/components/ReportSheet';
 const { height: WINDOW_HEIGHT, width: WINDOW_WIDTH } = Dimensions.get('window');
 
 const SingleVideo = ({
-  url, isActive, isUnlocked, onNeedAd, onActivePlayerReady
+  url, isActive, isUnlocked, onNeedAd, onActivePlayerReady, previewText
 }: {
   url: string, isActive: boolean, isUnlocked: boolean, onNeedAd: () => void,
-  onActivePlayerReady: (player: VideoPlayer | null) => void
+  onActivePlayerReady: (player: VideoPlayer | null) => void, previewText: string
 }) => {
   const [manuallyPaused, setManuallyPaused] = useState(false);
   const [showPauseIcon, setShowPauseIcon] = useState(false);
@@ -101,7 +101,7 @@ const SingleVideo = ({
       {!isUnlocked && (
         <View style={styles.lockedOverlay}>
           <ActivityIndicator color={colors.dark.primary} size="large" />
-          <Text style={styles.lockedText}>Preview playing...</Text>
+          <Text style={styles.lockedText}>{previewText}</Text>
         </View>
       )}
     </Pressable>
@@ -150,7 +150,7 @@ export default function PlayerScreen() {
 
   const { userId } = useAuth();
   const { updateProgress, isFavorite, toggleFavorite } = useDrama();
-  const { locale } = useLocale();
+  const { locale, t } = useLocale();
   const queryClient = useQueryClient();
 
   const { data: drama, isLoading, isError } = useGetDramaPlayback(
@@ -220,7 +220,7 @@ export default function PlayerScreen() {
   }
 
   if (isError || !drama) {
-    return <View style={styles.container}><Text style={styles.errorText}>Drama not found</Text></View>;
+    return <View style={styles.container}><Text style={styles.errorText}>{t("player.notFound")}</Text></View>;
   }
 
   if (drama.episodes.length === 0) {
@@ -229,7 +229,7 @@ export default function PlayerScreen() {
         <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backOnlyButton}>
           <FontAwesome5 name="chevron-left" solid size={20} color={colors.dark.foreground} />
         </Pressable>
-        <Text style={styles.errorText}>No episodes available yet</Text>
+        <Text style={styles.errorText}>{t("player.noEpisodes")}</Text>
       </View>
     );
   }
@@ -281,6 +281,7 @@ export default function PlayerScreen() {
               isUnlocked={item.isUnlocked}
               onNeedAd={() => setShowAdWall(true)}
               onActivePlayerReady={onActivePlayerReady}
+              previewText={t("player.previewPlaying")}
             />
           </View>
         )}
@@ -307,25 +308,25 @@ export default function PlayerScreen() {
           <View style={[styles.actionIconWrap, likes[currentEp.episodeNumber] && styles.actionIconWrapActive]}>
             <FontAwesome5 name="heart" solid size={24} color={likes[currentEp.episodeNumber] ? colors.dark.primary : colors.dark.foreground} />
           </View>
-          <Text style={styles.actionText}>Like</Text>
+          <Text style={styles.actionText}>{t("player.like")}</Text>
         </Pressable>
         <Pressable style={styles.actionItem} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); toggleFavorite(dramaId); }}>
           <View style={[styles.actionIconWrap, isFavorite(dramaId) && styles.actionIconWrapActive]}>
             <FontAwesome5 name="bookmark" solid size={24} color={isFavorite(dramaId) ? colors.dark.accent : colors.dark.foreground} />
           </View>
-          <Text style={styles.actionText}>Save</Text>
+          <Text style={styles.actionText}>{t("player.save")}</Text>
         </Pressable>
         <Pressable style={styles.actionItem} onPress={() => setShowDrawer(true)}>
           <View style={styles.actionIconWrap}>
             <FontAwesome5 name="list-ul" solid size={24} color={colors.dark.foreground} />
           </View>
-          <Text style={styles.actionText}>Episodes</Text>
+          <Text style={styles.actionText}>{t("player.episodes")}</Text>
         </Pressable>
         <Pressable style={styles.actionItem}>
           <View style={styles.actionIconWrap}>
             <FontAwesome5 name="share" solid size={24} color={colors.dark.foreground} />
           </View>
-          <Text style={styles.actionText}>Share</Text>
+          <Text style={styles.actionText}>{t("player.share")}</Text>
         </Pressable>
         <Pressable style={styles.actionItem} onPress={() => setShowReport(true)}>
           <View style={styles.actionIconWrap}>
@@ -339,16 +340,16 @@ export default function PlayerScreen() {
         <View style={styles.badgeRow} pointerEvents="none">
           {isUnlocked ? (
             <View style={styles.freeBadge}>
-              <Text style={styles.freeText}>Unlocked</Text>
+              <Text style={styles.freeText}>{t("player.unlocked")}</Text>
             </View>
           ) : (
             <View style={[styles.freeBadge, { backgroundColor: colors.dark.muted }]}>
-              <Text style={styles.freeText}>Preview</Text>
+              <Text style={styles.freeText}>{t("player.preview")}</Text>
             </View>
           )}
         </View>
         <Text style={styles.titleText} pointerEvents="none">{drama.title}</Text>
-        <Text style={styles.epText} pointerEvents="none">Episode {currentEp.episodeNumber} / {drama.episodes.length}</Text>
+        <Text style={styles.epText} pointerEvents="none">{t("player.episode", { n: currentEp.episodeNumber, total: drama.episodes.length })}</Text>
 
         <ProgressBar progress={progressFraction} onSeek={handleSeek} disabled={!isUnlocked} />
       </SafeAreaView>
