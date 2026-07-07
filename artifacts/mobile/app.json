@@ -1,12 +1,13 @@
 {
   "expo": {
-    "name": "短剧 Drama App",
+    "name": "Nebula TV",
     "slug": "mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "mobile",
     "userInterfaceStyle": "automatic",
+    "backgroundColor": "#000000",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": false,
